@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SAWSCore8API", "SAWSCore8API\SAWSCore8API.csproj", "{9DC6F28C-56CF-40F1-A74E-A5D44FBB2FFD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9DC6F28C-56CF-40F1-A74E-A5D44FBB2FFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DC6F28C-56CF-40F1-A74E-A5D44FBB2FFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DC6F28C-56CF-40F1-A74E-A5D44FBB2FFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DC6F28C-56CF-40F1-A74E-A5D44FBB2FFD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2C63EB00-42D2-4433-AFDC-8E1AD898A29E}
+	EndGlobalSection
+EndGlobal
