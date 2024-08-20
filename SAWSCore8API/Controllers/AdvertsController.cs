@@ -228,8 +228,8 @@ namespace SAWSCore8API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to get adverts");
-                return Problem("Unable to get adverts");
+                _logger.LogError(ex, "Unhandled exception from AdvertsController.GetAllAdverts");
+                return Problem("Unable to get the adverts");
             }
         }
 
