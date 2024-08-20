@@ -147,6 +147,23 @@ namespace SAWSCore8API.Services
                 _context.userProfiles.Add(userProfile);
                 Save();
 
+                Subscription adminSubscription = new Subscription();
+                adminSubscription.userprofileid = userProfile.userprofileid;
+                adminSubscription.package_name = "Admin";
+                adminSubscription.package_id = 7;
+                adminSubscription.package_price = 0;
+                adminSubscription.start_date = DateTime.Now;
+                adminSubscription.end_date = DateTime.Now.AddYears(1);
+                adminSubscription.subscription_duration = 365;
+                adminSubscription.subscription_token = "";
+                adminSubscription.subscription_status = "Active";
+                adminSubscription.created_at = DateTime.Now;
+                adminSubscription.updated_at = DateTime.Now;
+                adminSubscription.isdeleted = false;
+
+                _context.Subscriptions.Add(adminSubscription);
+                Save();
+
                 return CreateResult.SuccessResult(userProfile.userprofileid);
             }
 
@@ -237,7 +254,6 @@ namespace SAWSCore8API.Services
             return CreateResult.FailureResult("Unable to add subscriber user profile");
         }
 
-
         public Task<UpdateResult> UpdateUserProfile(UserProfile user)
         {
             user.updated_at = DateTime.Now;
@@ -252,11 +268,22 @@ namespace SAWSCore8API.Services
         public async Task<UpdateResult> UpdateIdentityEmail(UserProfile userProfile)
         {
             var user = await _userManager.FindByIdAsync(userProfile.aspuid);
+            // var user = await _userManager.FindByNameAsync(userProfile.username);
+
+            string[] nameParts = userProfile.fullname.Split(' ');
+
+            var firstName = nameParts.Length > 0 ? nameParts[0] : string.Empty;
+            var lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+            var middleName = nameParts.Length > 2 ? string.Join(" ", nameParts[1..^1]) : string.Empty;
 
             if (user != null)
             {
                 user.Email = userProfile.email;
-                user.UserName = userProfile.email;
+                user.UserName = userProfile.username;
+                user.FirstName = firstName + (string.IsNullOrEmpty(middleName) ? "" : " " + middleName);
+                user.LastName = lastName;
+                user.UserName = userProfile.username;
+                user.IsActive = (bool)userProfile.isactive;
 
                 var result = await _userManager.UpdateAsync(user);
 
@@ -273,31 +300,55 @@ namespace SAWSCore8API.Services
             return UpdateResult.FailureResult("Identity user does not exist");
         }
 
-        /*      public IEnumerable<Advert> GetAllAdverts()
-              {
-                  return _context.Adverts
-                  .Where(d => d.isdeleted == false && d.ispublished == true)
-                  .Include(d => d.DocAdverts)
-                  .ToList();
-              }*/
+        public async Task<LoggedInResult> GetLoggedInUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
 
-        /*   public Advert GetAdvertByAdvertId(int id)
-           {
-               return _context.Adverts
-                       .Where(d => d.advertId == id && d.isdeleted == false)
-                       .Include(d => d.DocAdverts)
-                       .FirstOrDefault();
-           }*/
+            if (user != null)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+                List<string> roles = (List<string>)userRoles;
+                string rolesList = string.Join(",", roles.ToArray());
 
-        /* public void DeleteAdvertById(int id)
+                return LoggedInResult.SuccessResult(user, rolesList);
+            }
+            else
+            {
+                return LoggedInResult.FailureResult("User Not Found");
+            }
+        }
+
+        public async Task<DeleteResult> DeleteUserProfileById(int id)
          {
-             var advert = _context.Adverts.First(a => a.advertId == id);
+             var user = _context.userProfiles.First(a => a.userprofileid == id);
 
-             advert.isdeleted = true;
-             advert.deleted_at = DateTime.Now;
+            user.isdeleted = true;
+            user.isactive = false;
+            user.deleted_at = DateTime.Now;
 
-             Save();
-         }*/
+            Save();
+
+            var IdentityUser = await _userManager.FindByIdAsync(user.aspuid);
+
+            if (IdentityUser == null)
+            {
+                return DeleteResult.SuccessResult("Identity user does not exist");
+            }
+
+            IdentityUser.IsActive = false;
+
+            var result = await _userManager.UpdateAsync(IdentityUser);
+
+            if (result.Succeeded)
+            {
+                return DeleteResult.SuccessResult("User successfully deleted");
+            }
+            else
+            {
+                return DeleteResult.FailureResult("Failed to delete user");
+            }
+
+        }
 
 
         public void Save()

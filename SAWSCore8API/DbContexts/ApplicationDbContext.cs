@@ -83,7 +83,17 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                     updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
                     isdeleted = false,
                     deleted_at = null
-                }
+                },
+                new Package
+                  {
+                      packageId = 7,
+                      name = "Admin",
+                      price = 0.00m,
+                      created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                      updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                      isdeleted = false,
+                      deleted_at = null
+                  }
             );
     }
 

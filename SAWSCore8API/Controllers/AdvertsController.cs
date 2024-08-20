@@ -275,7 +275,7 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
         // [Authorize(Roles.Administrator)]
-        public IActionResult DeleteAdvertById(int id)
+        public async Task<IActionResult> DeleteAdvertById(int id)
         {
             try
             {
@@ -284,9 +284,17 @@ namespace SAWSCore8API.Controllers
                     return NotFound();
                 }
 
-                _advertService.DeleteAdvertById(id);
+                var result = await _advertService.DeleteAdvertById(id);
 
-                return Ok(new ResponseDto { Status = "Success", Message = "Successfully deleted advert" });
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new BadRequestResult();
+                }
+
             }
             catch (Exception ex)
             {

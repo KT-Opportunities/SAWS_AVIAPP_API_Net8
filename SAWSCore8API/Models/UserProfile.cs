@@ -12,7 +12,6 @@ namespace SAWSCore8API.Models
         public string email { get; set; }
         public string? username { get; set; }
         public bool? isactive { get; set; }
-        public string? mobilenumber { get; set; }
         public string userrole { get; set; }
         public string aspuid { get; set; }
         public DateTime? created_at { get; set; }

@@ -6,6 +6,7 @@ using SAWSCore8API.Interfaces;
 using SAWSCore8API.Dtos;
 using System.Net.Mime;
 using SAWSCore8API.Dto;
+using SAWSCore8API.Services;
 
 namespace SAWSCore8API.Controllers
 {
@@ -120,6 +121,10 @@ namespace SAWSCore8API.Controllers
         }
 
         [HttpPost("RegisterSubscriber")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(RegisterSubscriber))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ResponseDto))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RegisterSubscriber(RegisterSubscriber appUser)
         {
             if (!ModelState.IsValid)
@@ -192,7 +197,7 @@ namespace SAWSCore8API.Controllers
                     return Ok(new Response
                     {
                         Status = "Success",
-                        Message = "Successfully updated admin user",
+                        Message = "Successfully updated user",
                         DetailDescription = userProfile
                     });
                 }
@@ -204,13 +209,73 @@ namespace SAWSCore8API.Controllers
                             {
                                 { "General", new[] { "Failed to update admin user. Invalid condition." } }
                             }
-                });
-                // }
+                }); 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception from AdvertsController.PostInsertNewAdvert");
-                return Problem("Unable to process the advert.");
+                _logger.LogError(ex, "Unhandled exception from AuthenticationController.UpdateUserProfile");
+                return Problem("Unable to process the user update.");
+            }
+        }
+
+        [HttpDelete("DeleteUserProfileById")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
+        // [Authorize(Roles.Administrator)]
+        public async Task<IActionResult> DeleteUserProfileById(int id)
+        {
+            try
+            {
+                if (!UserIdExists(id))
+                {
+                    return NotFound();
+                }
+
+                var result = await _authenticateService.DeleteUserProfileById(id);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                } else
+                {
+                    return new BadRequestResult();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.DeleteUserProfileById");
+                return Problem("Unable to Delete the user");
+            }
+
+        }
+
+        [HttpGet("GetLoggedInUser")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(LoggedInResult))]
+        public async Task<IActionResult> GetLoggedInUser(string id)
+        {
+            try
+            {
+                var result = await _authenticateService.GetLoggedInUser(id);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new NotFoundResult();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.GetLoggedInUser");
+                return Problem("Unable to get logged in user");
             }
         }
 
@@ -304,46 +369,17 @@ namespace SAWSCore8API.Controllers
 
 
         #region Helper Methods
+
         private bool UserExists(string email)
         {
             return _context.User.Any(e => e.UserName == email || e.Email == email);
         }
 
+        private bool UserIdExists(int id)
+        {
+            return _context.userProfiles.Any(e => e.userprofileid == id);
+        }
+
         #endregion
-
-
-        // GET: api/<AuthenticateController>
-        /*     [HttpGet]
-
-             public IEnumerable<string> Get()
-             {
-                 return new string[] { "value1", "value2" };
-             }*/
-
-        // GET api/<AuthenticateController>/5
-        /*     [HttpGet("{id}")]
-             public string Get(int id)
-             {
-                 return "value";
-             }*/
-
-        // POST api/<AuthenticateController>
-        /*    [HttpPost]
-            public void Post([FromBody] string value)
-            {
-            }*/
-
-        // PUT api/<AuthenticateController>/5
-        /*        [HttpPut("{id}")]
-
-                public void Put(int id, [FromBody] string value)
-                {
-                }*/
-
-        // DELETE api/<AuthenticateController>/5
-        /*        [HttpDelete("{id}")]
-                public void Delete(int id)
-                {
-                }*/
     }
 }

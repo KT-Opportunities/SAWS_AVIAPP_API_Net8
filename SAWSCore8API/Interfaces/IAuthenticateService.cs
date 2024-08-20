@@ -10,10 +10,8 @@ namespace SAWSCore8API.Interfaces
         Task<CreateResult> AddSubscriberUserProfile(RegisterSubscriber appUser);
         Task<UpdateResult> UpdateUserProfile(UserProfile user);
         Task<UpdateResult> UpdateIdentityEmail(UserProfile userProfile);
-
-        // IEnumerable<Advert> GetAllAdverts();
-        // Advert GetAdvertByAdvertId(int id);
-        // void DeleteAdvertById(int id);
+        Task<DeleteResult> DeleteUserProfileById(int id);
+        Task<LoggedInResult> GetLoggedInUser(string id);
         void Save();
     }
 }
