@@ -104,12 +104,20 @@ namespace SAWSCore8API.Services
 
         public async Task<CreateResult> AddAdminUserProfile(RegisterAdmin appUser)
         {
+            string[] nameParts = appUser.Fullname.Split(' ');
+
+            var firstName = nameParts.Length > 0 ? nameParts[0] : string.Empty;
+            var middleName = nameParts.Length > 2 ? string.Join(" ", nameParts[1..^1]) : string.Empty;
+            var lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+
             var user = new ApplicationUser
             {
                 UserName = appUser.Username,
                 Email = appUser.Email,
                 IsActive = true,
-                IsAdminUser = true
+                IsAdminUser = true,
+                FirstName = firstName + (string.IsNullOrEmpty(middleName) ? "" : " " + middleName),
+                LastName = lastName
             };
 
             var userRole = "Admin";
@@ -128,6 +136,9 @@ namespace SAWSCore8API.Services
 
                 userProfile.email = appUser.Email;
                 userProfile.aspuid = user.Id;
+                userProfile.fullname = appUser.Fullname;
+                userProfile.username = appUser.Username;
+                userProfile.isactive = true;
                 userProfile.userrole = userRole;
                 userProfile.created_at = DateTime.Now;
                 userProfile.updated_at = DateTime.Now;
@@ -144,12 +155,20 @@ namespace SAWSCore8API.Services
 
         public async Task<CreateResult> AddSubscriberUserProfile(RegisterSubscriber appUser)
         {
+            string[] nameParts = appUser.Fullname.Split(' ');
+
+            var firstName = nameParts.Length > 0 ? nameParts[0] : string.Empty;
+            var lastName = nameParts.Length > 1 ? nameParts[1] : string.Empty;
+            var middleName = nameParts.Length > 2 ? string.Join(" ", nameParts[1..^1]) : string.Empty;
+
             var user = new ApplicationUser
             {
                 UserName = appUser.Username,
                 Email = appUser.Email,
                 IsActive = true,
-                IsAdminUser = false
+                IsAdminUser = false,
+                FirstName = firstName + (string.IsNullOrEmpty(middleName) ? "" : " " + middleName),
+                LastName = lastName
             };
 
             var userRole = "Subscriber";
@@ -169,6 +188,9 @@ namespace SAWSCore8API.Services
                 userProfile.email = appUser.Email;
                 userProfile.aspuid = user.Id;
                 userProfile.userrole = userRole;
+                userProfile.fullname = appUser.Fullname;
+                userProfile.username = appUser.Username;
+                userProfile.isactive = true;
                 userProfile.created_at = DateTime.Now;
                 userProfile.updated_at = DateTime.Now;
                 userProfile.isdeleted = false;

@@ -10,6 +10,8 @@ namespace SAWSCore8API.Models
         public int userprofileid { get; set; }
         public string? fullname { get; set; }
         public string email { get; set; }
+        public string? username { get; set; }
+        public bool? isactive { get; set; }
         public string? mobilenumber { get; set; }
         public string userrole { get; set; }
         public string aspuid { get; set; }
