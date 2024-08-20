@@ -63,7 +63,6 @@ namespace SAWSCore8API.Models
         public double amount { get; set; }
         public double recurring_amount { get; set; }
         public string frequency { get; set; }
-
         public int userId { get; set; }
         public int package_id { get; set; }
         public int subscription_amount { get; set; }

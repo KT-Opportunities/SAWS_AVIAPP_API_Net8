@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SAWSCore8API.DbContexts;
 
@@ -11,9 +12,11 @@ using SAWSCore8API.DbContexts;
 namespace SAWSCore8API.Migrations
 {
     [DbContext(typeof(SAWSDbContext))]
-    partial class SAWSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240819134524_UpdateApplicationUserColumns")]
+    partial class UpdateApplicationUserColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -391,9 +394,11 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("file_extention")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_mimetype")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_origname")
@@ -401,12 +406,14 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_seqname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long?>("file_size")
                         .HasColumnType("bigint");
 
                     b.Property<string>("file_url")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("isdeleted")
@@ -431,15 +438,18 @@ namespace SAWSCore8API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("feedbackId"));
 
                     b.Property<string>("batchId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("broadcasterEmail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("broadcasterId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("deleted_at")
@@ -456,9 +466,11 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("responderEmail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("senderEmail")
@@ -473,7 +485,7 @@ namespace SAWSCore8API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("updated_at")
+                    b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("feedbackId");
@@ -490,9 +502,11 @@ namespace SAWSCore8API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("feedbackMessageId"));
 
                     b.Property<string>("broadcast")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("broadcastId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("created_at")
@@ -502,12 +516,15 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("feedback")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("feedbackAttachment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("feedbackAttachmentFileName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("feedbackId")
@@ -517,18 +534,23 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("responderEmail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("response")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responseAttachment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responseAttachmentFileName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("senderEmail")
@@ -557,7 +579,7 @@ namespace SAWSCore8API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("packageId"));
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("deleted_at")
@@ -574,7 +596,7 @@ namespace SAWSCore8API.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("updated_at")
+                    b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("packageId");
@@ -646,7 +668,7 @@ namespace SAWSCore8API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("serviceId"));
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("deleted_at")
@@ -659,11 +681,10 @@ namespace SAWSCore8API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("packageId")
-                        .IsRequired()
+                    b.Property<int>("packageId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("updated_at")
+                    b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("serviceId");
@@ -681,7 +702,7 @@ namespace SAWSCore8API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("serviceProductId"));
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("deleted_at")
@@ -697,7 +718,7 @@ namespace SAWSCore8API.Migrations
                     b.Property<int>("serviceId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("updated_at")
+                    b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("serviceProductId");
@@ -741,13 +762,15 @@ namespace SAWSCore8API.Migrations
                     b.Property<DateTime>("start_date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("subscription_duration")
+                    b.Property<int>("subscription_duration")
                         .HasColumnType("int");
 
                     b.Property<string>("subscription_status")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("subscription_token")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("updated_at")
@@ -786,12 +809,14 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("fullname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("isdeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("mobilenumber")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("updated_at")

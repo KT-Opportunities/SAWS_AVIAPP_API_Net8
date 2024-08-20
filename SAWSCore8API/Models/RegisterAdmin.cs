@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace SAWSCore8API.Models
 {
     [NotMapped]
-    public class Register
+    public class RegisterAdmin
     {
         [Required(ErrorMessage = "User Name is required")]
         public string Username { get; set; }

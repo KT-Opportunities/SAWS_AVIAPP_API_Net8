@@ -20,5 +20,14 @@
 
             return errors;
         }
+
+        public static UpdateResult FailureResult(string errorMessage)
+        {
+            return new UpdateResult
+            {
+                Success = false,
+                ErrorMessages = CreateError(errorMessage)
+            };
+        }
     }
 }

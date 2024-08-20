@@ -12,6 +12,7 @@ namespace SAWSCore8API.Configurations
 
             // services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IAdvertService, AdvertService>();
+            services.AddScoped<IAuthenticateService, AuthenticateService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<ISawsService, SawsService>();
 
