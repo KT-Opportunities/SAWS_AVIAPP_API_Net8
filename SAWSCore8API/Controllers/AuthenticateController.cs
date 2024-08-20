@@ -96,7 +96,7 @@ namespace SAWSCore8API.Controllers
                 return new BadRequestObjectResult(new ResponseDto
                 {
                     Status = "Failed",
-                    Message = "Admin User already exist",
+                    Message = "User already exist",
                 });
             }
 
@@ -116,6 +116,42 @@ namespace SAWSCore8API.Controllers
             {
                 _logger.LogError(ex, "Unhandled exception from AuthenticateController.RegisterAdmin");
                 return Problem("Unable to process the admin user registration.");
+            }
+        }
+
+        [HttpPost("RegisterSubscriber")]
+        public async Task<IActionResult> RegisterSubscriber(RegisterSubscriber appUser)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BadRequestResult();
+            }
+
+            if (UserExists(appUser.Email))
+            {
+                return new BadRequestObjectResult(new ResponseDto
+                {
+                    Status = "Failed",
+                    Message = "User already exist",
+                });
+            }
+
+            try
+            {
+                var newSubscriberResult = await _authenticateService.AddSubscriberUserProfile(appUser);
+
+                if (!newSubscriberResult.Success)
+                {
+                    return new BadRequestObjectResult("Subscriber user not added");
+                }
+
+                return Ok(newSubscriberResult);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.RegisterSubscriber");
+                return Problem("Unable to process the subscriber user registration.");
             }
         }
 

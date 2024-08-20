@@ -112,20 +112,23 @@ namespace SAWSCore8API.Services
                 IsAdminUser = true
             };
 
+            var userRole = "Admin";
+
             var result = await _userManager.CreateAsync(user, appUser.Password);
 
-            if (!await _roleManager.RoleExistsAsync("Admin"))
-                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+
+            if (!await _roleManager.RoleExistsAsync(userRole))
+                await _roleManager.CreateAsync(new IdentityRole(userRole));
 
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, appUser.UserRole);
+                await _userManager.AddToRoleAsync(user, userRole);
 
                 UserProfile userProfile = new UserProfile();
 
                 userProfile.email = appUser.Email;
                 userProfile.aspuid = user.Id;
-                userProfile.userrole = appUser.UserRole;
+                userProfile.userrole = userRole;
                 userProfile.created_at = DateTime.Now;
                 userProfile.updated_at = DateTime.Now;
                 userProfile.isdeleted = false;
@@ -149,23 +152,29 @@ namespace SAWSCore8API.Services
                 IsAdminUser = false
             };
 
+            var userRole = "Subscriber";
+
             var result = await _userManager.CreateAsync(user, appUser.Password);
 
-            if (!await _roleManager.RoleExistsAsync("Subscriber"))
-                await _roleManager.CreateAsync(new IdentityRole("Subscriber"));
+
+            if (!await _roleManager.RoleExistsAsync(userRole))
+                await _roleManager.CreateAsync(new IdentityRole(userRole));
 
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, appUser.UserRole);
+                await _userManager.AddToRoleAsync(user, userRole);
 
                 UserProfile userProfile = new UserProfile();
 
                 userProfile.email = appUser.Email;
                 userProfile.aspuid = user.Id;
-                userProfile.userrole = appUser.UserRole;
+                userProfile.userrole = userRole;
                 userProfile.created_at = DateTime.Now;
                 userProfile.updated_at = DateTime.Now;
                 userProfile.isdeleted = false;
+
+                _context.userProfiles.Add(userProfile);
+                Save();
 
                 Subscription freeSubscription = new Subscription();
                 freeSubscription.userprofileid = userProfile.userprofileid;
@@ -176,15 +185,15 @@ namespace SAWSCore8API.Services
                 freeSubscription.end_date = DateTime.Now.AddYears(1);
                 freeSubscription.subscription_duration = 365;
                 freeSubscription.subscription_token = "";
-                freeSubscription.subscription_status = "Active"; freeSubscription.created_at = DateTime.Now;
+                freeSubscription.subscription_status = "Active"; 
+                freeSubscription.created_at = DateTime.Now;
                 freeSubscription.updated_at = DateTime.Now;
                 freeSubscription.isdeleted = false;
 
-                // _context.userProfiles.Add(userProfile);
-                // _context.Subscriptions.Add(freeSubscription);
-                // Save();
+                _context.Subscriptions.Add(freeSubscription);
+                Save();
 
-                using var transaction = await _context.Database.BeginTransactionAsync();
+              /*  using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
                     _context.userProfiles.Add(userProfile);
@@ -196,13 +205,14 @@ namespace SAWSCore8API.Services
                 {
                     await transaction.RollbackAsync();
                     _logger.LogError(ex, "Unhandled exception from AuthenticateService.AddSubscriberUserProfile");
-                    // return Problem("Unable to process the commit to database.");
-                }
+                    return CreateResult.FailureResult("Unable to process the commit to database.");
+                }*/
+
 
                 return CreateResult.SuccessResult(userProfile.userprofileid);
             }
 
-            return CreateResult.FailureResult("Unable to add admin user profile");
+            return CreateResult.FailureResult("Unable to add subscriber user profile");
         }
 
 
@@ -272,7 +282,5 @@ namespace SAWSCore8API.Services
         {
             _context.SaveChanges();
         }
-
-
     }
 }
