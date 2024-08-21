@@ -12,6 +12,7 @@ namespace SAWSCore8API.Interfaces
         Task<UpdateResult> UpdateIdentityEmail(UserProfile userProfile);
         Task<DeleteResult> DeleteUserProfileById(int id);
         Task<LoggedInResult> GetLoggedInUser(string id);
+        Task<LoginExistResult> LoginEmailExist(string email);
         void Save();
     }
 }

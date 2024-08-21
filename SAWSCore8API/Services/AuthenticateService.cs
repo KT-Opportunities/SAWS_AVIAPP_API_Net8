@@ -279,7 +279,9 @@ namespace SAWSCore8API.Services
             if (user != null)
             {
                 user.Email = userProfile.email;
+                user.NormalizedEmail = userProfile.email;
                 user.UserName = userProfile.username;
+                user.NormalizedUserName = userProfile.username;
                 user.FirstName = firstName + (string.IsNullOrEmpty(middleName) ? "" : " " + middleName);
                 user.LastName = lastName;
                 user.UserName = userProfile.username;
@@ -315,6 +317,20 @@ namespace SAWSCore8API.Services
             else
             {
                 return LoggedInResult.FailureResult("User Not Found");
+            }
+        }
+
+        public async Task<LoginExistResult> LoginEmailExist(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user != null)
+            {
+                return LoginExistResult.SuccessResult(true);
+            }
+            else
+            {
+                return LoginExistResult.SuccessResult(false);
             }
         }
 

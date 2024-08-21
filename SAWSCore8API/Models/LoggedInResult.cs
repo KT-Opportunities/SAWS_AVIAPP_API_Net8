@@ -10,7 +10,7 @@ namespace SAWSCore8API.Models
         public string firstname { get; set; }
         public string lastname { get; set; }
         public string userRole { get; set; }
-        public string erromessage { get; set; }
+        // public string erromessage { get; set; }
 
 
         public static LoggedInResult SuccessResult(ApplicationUser user, string rolesList)
@@ -20,6 +20,7 @@ namespace SAWSCore8API.Models
                 Success = true,
                 userID = user.Id,
                 userEmail = user.Email,
+                userName = user.UserName,
                 firstname = user.FirstName,
                 lastname = user.LastName,
                 userRole = rolesList
@@ -31,7 +32,7 @@ namespace SAWSCore8API.Models
             return new LoggedInResult
             {
                 Success = false,
-                erromessage = errorMessage
+                ErrorMessages = CreateError(errorMessage)
             };
         }
     }

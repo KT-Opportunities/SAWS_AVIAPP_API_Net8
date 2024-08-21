@@ -4,7 +4,7 @@ using SAWSCore8API.Interfaces;
 using SAWSCore8API.Configurations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace SAWSCore8API.Services
 {
@@ -29,6 +29,7 @@ namespace SAWSCore8API.Services
 
             var pagedData = _context.userProfiles
                          .Where(d => d.isdeleted == false && d.userrole == "Admin")
+                         .Include(d => d.Subscription)
                          .OrderByDescending(d => d.userprofileid)
                         .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
                         .Take(validFilter.PageSize)

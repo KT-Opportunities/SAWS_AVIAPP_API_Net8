@@ -7,6 +7,8 @@ using SAWSCore8API.Dtos;
 using System.Net.Mime;
 using SAWSCore8API.Dto;
 using SAWSCore8API.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Data;
 
 namespace SAWSCore8API.Controllers
 {
@@ -165,6 +167,8 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(UserProfile))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(UpdateResult))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        //[Authorize(Roles.Administrator)]
+        // make sure that only admins can delete and update profile
         public async Task<IActionResult> UpdateUserProfile(UserProfile userProfile)
         {
             if (!ModelState.IsValid)
@@ -183,10 +187,10 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                if (!UserExists(userProfile.email))
+/*                if (!UserExists(userProfile.email))
                 {
                     return NotFound();
-                }
+                }*/
 
                 var updateUserProfileResult = await _authenticateService.UpdateUserProfile(userProfile);
 
@@ -223,7 +227,8 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
-        // [Authorize(Roles.Administrator)]
+        //[Authorize(Roles.Administrator)]
+        // make sure that only admins can delete and update profile
         public async Task<IActionResult> DeleteUserProfileById(int id)
         {
             try
@@ -276,6 +281,32 @@ namespace SAWSCore8API.Controllers
             {
                 _logger.LogError(ex, "Unhandled exception from AuthenticateController.GetLoggedInUser");
                 return Problem("Unable to get logged in user");
+            }
+        }
+
+        [HttpGet("LoginEmailExist")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> LoginEmailExist(string email)
+        {
+            try
+            {
+                var result = await _authenticateService.LoginEmailExist(email);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new BadRequestResult();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.LoginEmailExist");
+                return Problem("Unable to get LoginEmailExist result");
             }
         }
 
