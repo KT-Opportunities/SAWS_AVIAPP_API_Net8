@@ -10,6 +10,7 @@ namespace SAWSCore8API.Models
         public string Fullname { get; set; }
         public string AspUserName { get; set; }
         public string AspUserEmail { get; set; }
+        public bool IsAdmin { get; set; }
         public List<string> RolesList { get; set; }
         public int UserProfileId { get; set; }
         public string UserProfileStatus { get; set; }
@@ -25,6 +26,7 @@ namespace SAWSCore8API.Models
                 Fullname = userProfile?.fullname ?? string.Empty,
                 AspUserName = user.UserName,
                 AspUserEmail = user.Email,
+                IsAdmin = user.IsAdminUser,
                 RolesList = rolesList,
                 UserProfileId = userProfile?.userprofileid ?? 0,
                 UserProfileStatus = userProfile != null ? "user profile exists" : "missing user profile"
