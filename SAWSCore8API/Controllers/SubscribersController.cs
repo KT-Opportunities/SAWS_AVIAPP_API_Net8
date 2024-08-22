@@ -43,9 +43,11 @@ namespace SAWSCore8API.Controllers
                 return new BadRequestResult();
             }
 
+            var role = "Subscriber";
+
             try
             {
-                var pagedSubscribers = await _sawsService.GetPagedAllSubscribers(filter);
+                var pagedSubscribers = await _sawsService.GetPagedAllUsers(filter, role);
                 return new OkObjectResult(pagedSubscribers);
 
             }

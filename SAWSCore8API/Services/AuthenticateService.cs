@@ -156,7 +156,7 @@ namespace SAWSCore8API.Services
                 adminSubscription.end_date = DateTime.Now.AddYears(1);
                 adminSubscription.subscription_duration = 365;
                 adminSubscription.subscription_token = "";
-                adminSubscription.subscription_status = "Active";
+                adminSubscription.isactive = true;
                 adminSubscription.created_at = DateTime.Now;
                 adminSubscription.updated_at = DateTime.Now;
                 adminSubscription.isdeleted = false;
@@ -224,7 +224,7 @@ namespace SAWSCore8API.Services
                 freeSubscription.end_date = DateTime.Now.AddYears(1);
                 freeSubscription.subscription_duration = 365;
                 freeSubscription.subscription_token = "";
-                freeSubscription.subscription_status = "Active"; 
+                freeSubscription.isactive = true; 
                 freeSubscription.created_at = DateTime.Now;
                 freeSubscription.updated_at = DateTime.Now;
                 freeSubscription.isdeleted = false;

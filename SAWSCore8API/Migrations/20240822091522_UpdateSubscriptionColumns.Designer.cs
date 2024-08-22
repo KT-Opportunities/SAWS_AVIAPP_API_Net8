@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SAWSCore8API.DbContexts;
 
@@ -11,9 +12,11 @@ using SAWSCore8API.DbContexts;
 namespace SAWSCore8API.Migrations
 {
     [DbContext(typeof(SAWSDbContext))]
-    partial class SAWSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240822091522_UpdateSubscriptionColumns")]
+    partial class UpdateSubscriptionColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -180,7 +183,7 @@ namespace SAWSCore8API.Migrations
                     b.Property<bool?>("isdeleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("ispublished")
+                    b.Property<bool?>("ispublished")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("updated_at")
@@ -575,7 +578,7 @@ namespace SAWSCore8API.Migrations
                             packageId = 1,
                             created_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             isdeleted = false,
-                            name = "Free",
+                            name = "monthly Free",
                             price = 0.00m,
                             updated_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified)
                         },
@@ -602,13 +605,22 @@ namespace SAWSCore8API.Migrations
                             packageId = 4,
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
+                            name = "annually Free",
+                            price = 0.00m,
+                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            packageId = 5,
+                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
+                            isdeleted = false,
                             name = "annually Premium",
                             price = 2160.00m,
                             updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
                         },
                         new
                         {
-                            packageId = 5,
+                            packageId = 6,
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
                             name = "annually Regulated",
@@ -617,7 +629,7 @@ namespace SAWSCore8API.Migrations
                         },
                         new
                         {
-                            packageId = 6,
+                            packageId = 7,
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
                             name = "Admin",

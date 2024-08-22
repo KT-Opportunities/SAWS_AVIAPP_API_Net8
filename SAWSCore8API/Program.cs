@@ -209,9 +209,9 @@ if (app.Environment.IsDevelopment())
 
     app.UseSwaggerUI(options =>
     {
-        options.InjectStylesheet("/swagger-ui/custom.css");
+        //options.InjectStylesheet("/swagger-ui/custom.css");
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Aviation API V1");
-        // options.SwaggerEndpoint("/swagger/v2/swagger.json", "Aviation API V2");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Aviation API V2");
         //options.RoutePrefix = string.Empty;
     });
 }

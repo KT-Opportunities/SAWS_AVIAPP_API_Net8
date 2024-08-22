@@ -5,6 +5,7 @@ using SAWSCore8API.Configurations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using SAWSCore8API.Dtos;
 
 namespace SAWSCore8API.Services
 {
@@ -22,22 +23,42 @@ namespace SAWSCore8API.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<ResponseModel<List<UserProfile>>> GetPagedAllAdmins([FromQuery] PaginationFilter filter)
+        public async Task<ResponseModel<List<UserProfileDto>>> GetPagedAllUsers([FromQuery] PaginationFilter filter, string role)
         {
             var route = _httpContextAccessor.HttpContext?.Request.Path.Value;
             var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
 
             var pagedData = _context.userProfiles
-                         .Where(d => d.isdeleted == false && d.userrole == "Admin")
-                         .Include(d => d.Subscription)
-                         .OrderByDescending(d => d.userprofileid)
-                        .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-                        .Take(validFilter.PageSize)
-                        .ToList();
+            .Where(d => d.isdeleted == false && d.userrole == role)
+            .Include(d => d.Subscription)
+            .OrderByDescending(d => d.userprofileid)
+            .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+            .Take(validFilter.PageSize)
+            .Select(d => new UserProfileDto
+            {
+                userprofileid = d.userprofileid,
+                fullname = d.fullname,
+                email = d.email,
+                username = d.username,
+                userrole = d.userrole,
+                aspuid = d.aspuid,
+                isactive = d.isactive,
+                created_at = d.created_at,
+                Subscription = d.Subscription
+                                .Where(s => s.isactive)
+                                .Select(s => new SubscriptionDto
+                                {
+                                    subscriptionId = s.subscriptionId,
+                                    package_name = s.package_name,
+                                    isactive = s.isactive,
+                                })
+                                .ToList()
+            })
+            .ToList();
 
-            var totalRecords = _context.userProfiles.Where(d => d.isdeleted == false && d.userrole == "Admin").Count();
+            var totalRecords = _context.userProfiles.Where(d => d.isdeleted == false && d.userrole == role).Count();
 
-            var pagedReponse = PaginationConfig.CreatePagedReponse<UserProfile>(pagedData, validFilter, totalRecords, _uriService, route);
+            var pagedReponse = PaginationConfig.CreatePagedReponse<UserProfileDto>(pagedData, validFilter, totalRecords, _uriService, route);
 
             return pagedReponse;
 
@@ -51,9 +72,9 @@ namespace SAWSCore8API.Services
             var pagedData = _context.Adverts
                 .Where(d => d.isdeleted == false)
                 .OrderByDescending(d => d.advertId)
-           .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-           .Take(validFilter.PageSize)
-           .ToList();
+                .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+                .Take(validFilter.PageSize)
+                .ToList();
 
             var totalRecords = _context.Adverts.Where(d => d.isdeleted == false).Count();
 
@@ -70,9 +91,9 @@ namespace SAWSCore8API.Services
             var pagedData = _context.Feedbacks
                 .Where(d => d.isdeleted == false && d.broadcasterId == null)
                 .OrderByDescending(d => d.feedbackId)
-           .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-           .Take(validFilter.PageSize)
-           .ToList();
+               .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+               .Take(validFilter.PageSize)
+               .ToList();
 
             var totalRecords = _context.Feedbacks.Where(d => d.isdeleted == false && d.broadcasterId == null).Count();
 
@@ -140,24 +161,6 @@ namespace SAWSCore8API.Services
             var pagedReponse = PaginationConfig.CreatePagedReponse<Feedback>(pagedData, validFilter, totalRecords, _uriService, route);
             return pagedReponse;
 
-        }
-
-        public async Task<ResponseModel<List<UserProfile>>> GetPagedAllSubscribers([FromQuery] PaginationFilter filter)
-        {
-            var route = _httpContextAccessor.HttpContext?.Request.Path.Value;
-            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
-
-            var pagedData = _context.userProfiles
-                .Where(d => d.isdeleted == false && d.userrole == "Subscriber")
-                //.Include(d => d.Subscription)
-                .OrderByDescending(d => d.userprofileid)
-           .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
-           .Take(validFilter.PageSize)
-           .ToList();
-            var totalRecords = _context.userProfiles.Where(d => d.isdeleted == false && d.userrole == "Subscriber").Count();
-
-            var pagedReponse = PaginationConfig.CreatePagedReponse<UserProfile>(pagedData, validFilter, totalRecords, _uriService, route);
-            return pagedReponse;
         }
 
     }

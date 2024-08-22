@@ -27,7 +27,7 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 new Package
                 {
                     packageId = 1,
-                    name = "monthly Free",
+                    name = "Free",
                     price = 0.00m,
                     created_at = new DateTime(2024, 2, 23, 12, 0, 0),
                     updated_at = new DateTime(2024, 2, 23, 12, 0, 0),
@@ -57,16 +57,6 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 new Package
                 {
                     packageId = 4,
-                    name = "annually Free",
-                    price = 0.00m,
-                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    isdeleted = false,
-                    deleted_at = null
-                },
-                new Package
-                {
-                    packageId = 5,
                     name = "annually Premium",
                     price = 2160.00m,
                     created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
@@ -76,7 +66,7 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 },
                 new Package
                 {
-                    packageId = 6,
+                    packageId = 5,
                     name = "annually Regulated",
                     price = 4560.00m,
                     created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
@@ -86,7 +76,7 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 },
                 new Package
                   {
-                      packageId = 7,
+                      packageId = 6,
                       name = "Admin",
                       price = 0.00m,
                       created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
