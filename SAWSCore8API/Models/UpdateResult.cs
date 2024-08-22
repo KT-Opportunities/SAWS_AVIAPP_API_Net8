@@ -3,11 +3,21 @@
     public class UpdateResult
     {
         public bool Success { get; set; }
+        public int OldId { get; set; }
         public IDictionary<string, IEnumerable<string>>? ErrorMessages { get; set; }
 
         public static UpdateResult SuccessResult()
         {
             return new UpdateResult { Success = true };
+        }
+
+        public static UpdateResult SuccessResultUpdate(int oldId)
+        {
+            return new UpdateResult
+            {
+                Success = true,
+                OldId = oldId
+            };
         }
 
         public static IDictionary<string, IEnumerable<string>> CreateError(string errorMessage)

@@ -15,7 +15,7 @@ namespace SAWSCore8API.Models
         [NotMapped]
         public IFormFile file { get; set; }
 
-        public string file_origname { get; set; }
+        public string? file_origname { get; set; }
         public string? file_seqname { get; set; }
         public string? file_url { get; set; }
         public string? file_mimetype { get; set; }

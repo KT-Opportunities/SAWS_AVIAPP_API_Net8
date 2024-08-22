@@ -56,7 +56,7 @@ namespace SAWSCore8API.Services
             _context.Adverts.Update(advert);
             Save();
 
-            return Task.FromResult(UpdateResult.SuccessResult());
+            return Task.FromResult(UpdateResult.SuccessResultUpdate(advert.advertId));
         }
 
         public IEnumerable<Advert> GetAllAdverts()

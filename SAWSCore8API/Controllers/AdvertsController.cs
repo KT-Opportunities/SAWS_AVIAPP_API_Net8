@@ -95,12 +95,14 @@ namespace SAWSCore8API.Controllers
 
                     if (newAdvertResult.Success)
                     {
-                        return Ok(new Response
-                        {
-                            Status = "Success",
-                            Message = "Successfully added new advert",
-                            DetailDescription = advert
-                        });
+                        // return Ok(new Response
+                        // {
+                        //     Status = "Success",
+                        //     Message = "Successfully added new advert",
+                        //     DetailDescription = advert
+                        // });
+                        
+                        return Ok(newAdvertResult);
                     }
 
                     return BadRequest(new CreateResult
@@ -124,12 +126,13 @@ namespace SAWSCore8API.Controllers
 
                     if (updateAdvertResult.Success)
                     {
-                        return Ok(new Response
-                        {
-                            Status = "Success",
-                            Message = "Successfully updated advert",
-                            DetailDescription = advert
-                        });
+                        // return Ok(new Response
+                        // {
+                        //     Status = "Success",
+                        //     Message = "Successfully updated advert",
+                        //     DetailDescription = advert
+                        // });
+                        return Ok(updateAdvertResult);
                     }
 
                     return BadRequest(new CreateResult
@@ -215,12 +218,14 @@ namespace SAWSCore8API.Controllers
                 var adverts = _advertService.GetAllAdverts();
 
                 var app_url = _configuration["AppURL"];
+                var host_location = _configuration["HostLocation"];
 
                 var toReturn = adverts.Select(ad => new AdvertDto
                 {
                     advertId = ad.advertId,
+                    advert_caption = ad.advert_caption,
                     advert_url = ad.advert_url,
-                    file_url = app_url + "APPS/aviapp_api/Uploads/" + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
+                    file_url = app_url + host_location + "/" + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
                 }).ToList();
 
                 return new OkObjectResult(toReturn);
@@ -240,6 +245,7 @@ namespace SAWSCore8API.Controllers
         public IActionResult GetAdvertByAdvertId(int id)
         {
             var app_url = _configuration["AppURL"];
+            var host_location = _configuration["HostLocation"];
 
             try
             {
@@ -249,7 +255,7 @@ namespace SAWSCore8API.Controllers
                     return NotFound();
                 }
 
-                string fileUrl = app_url + "APPS/aviapp_api/Uploads/" + advert.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + advert.advertId + "/" + advert.DocAdverts.FirstOrDefault()?.file_origname;
+                string fileUrl = app_url + host_location + "/"  + advert.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + advert.advertId + "/" + advert.DocAdverts.FirstOrDefault()?.file_origname;
 
                 return Ok(new Response
                 {
