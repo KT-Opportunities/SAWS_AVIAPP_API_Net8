@@ -75,7 +75,7 @@ namespace SAWSCore8API.Services
             _context.Feedbacks.Update(feedback);
             Save();
 
-            return Task.FromResult(UpdateResult.SuccessResult());
+            return Task.FromResult(UpdateResult.SuccessResultUpdate(feedback.feedbackId));
         }
 
         public Task<UpdateResult> UpdateBroadcast(Feedback feedback, string batchId, string broadcastId)
@@ -86,7 +86,7 @@ namespace SAWSCore8API.Services
             _context.Feedbacks.Update(feedback);
             Save();
 
-            return Task.FromResult(UpdateResult.SuccessResult());
+            return Task.FromResult(UpdateResult.SuccessResultUpdate(feedback.feedbackId));
         }
 
         public IEnumerable<FeedbackMessage> GetBroadcastMessages()

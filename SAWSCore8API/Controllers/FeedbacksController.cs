@@ -144,12 +144,14 @@ namespace SAWSCore8API.Controllers
 
                     if (newFeedbackResult.Success)
                     {
-                        return Ok(new Response
+                     /*   return Ok(new Response
                         {
                             Status = "Success",
                             Message = "Successfully added new feedback",
                             DetailDescription = feedback
-                        });
+                        });*/
+
+                        return Ok(newFeedbackResult);
                     }
 
                     return BadRequest(new CreateResult
@@ -179,6 +181,8 @@ namespace SAWSCore8API.Controllers
                             Message = "Successfully updated feedback",
                             DetailDescription = feedback
                         });
+
+                        /*return Ok(updateFeedbackResult);*/
                     }
 
                     return BadRequest(new CreateResult
@@ -240,12 +244,15 @@ namespace SAWSCore8API.Controllers
 
                         if (newFeedbackResult.Success)
                         {
-                            return Ok(new Response
-                            {
+                             /*   return Ok(new Response
+                                {
                                 Status = "Success",
                                 Message = "Successfully added new feedback",
                                 DetailDescription = feedback
                             });
+                             */
+                            
+                            return Ok(newFeedbackResult);
                         }
 
                         return BadRequest(new CreateResult
@@ -269,12 +276,14 @@ namespace SAWSCore8API.Controllers
 
                         if (updateFeedbackResult.Success)
                         {
-                            return Ok(new Response
+                           /* return Ok(new Response
                             {
                                 Status = "Success",
                                 Message = "Successfully updated feedback",
                                 DetailDescription = feedback
-                            });
+                            });*/
+
+                            return Ok(updateFeedbackResult);
                         }
 
                         return BadRequest(new CreateResult
@@ -297,7 +306,6 @@ namespace SAWSCore8API.Controllers
 
             return BadRequest();
         }
-
 
         [HttpDelete("DeleteFeedbackById")]
         [Consumes(MediaTypeNames.Application.Json)]

@@ -126,7 +126,7 @@ namespace SAWSCore8API.Controllers
                     }
                     else
                     {
-                        // Updating existing advert
+                        // Updating existing advert document
                         dbItem.updated_at = DateTime.Now;
                         dbItem.isdeleted = file.isdeleted;
 
@@ -139,6 +139,99 @@ namespace SAWSCore8API.Controllers
                 {
                     _logger.LogError(ex, "Unhandled exception from FileManagerController.PostDocsForAdvert");
                     return Problem("Unable to process the post of advert documents.");
+                }
+            }
+
+            return Ok(toReturn);
+
+        }
+
+        [HttpPost("PostDocsForFeedback")]
+        public async Task<IActionResult> PostDocsForFeedback([FromForm] IList<DocFeedback> files)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            var toReturn = new List<DocFeedback>();
+
+            foreach (var file in files)
+            {
+                var dbItem = new DocFeedback();
+
+                try
+                {
+                    var folderId = Convert.ToString(file.feedbackMessageId);
+                    var rootPath = Path.Combine(_environment.ContentRootPath, "Uploads");
+                    string path = Path.Combine(rootPath, rootPath + "\\Feedback\\" + folderId + "\\");
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
+
+                    // Fetch the File
+                    IFormFile postedFile = file.file;
+
+                    // Extract file datails.
+                    string fileName1 = postedFile.FileName;
+                    string fileName = fileName1;
+                    string fileUrl = Path.Combine(path, fileName);
+                    string fileExtension = Path.GetExtension(postedFile.FileName);
+                    long filesize = postedFile.Length;
+                    string mimeType = postedFile.ContentType;
+
+                    // Save the File.
+                    using (FileStream stream = new FileStream(Path.Combine(path, fileName), FileMode.Create))
+                    {
+                        postedFile.CopyTo(stream);
+                    }
+
+                    // Populate dbFileObject less the raw file
+                    dbItem.Id = file.Id;
+                    dbItem.feedbackMessageId = file.feedbackMessageId;
+                    dbItem.DocTypeName = file.DocTypeName;
+                    dbItem.file_origname = fileName;
+                    dbItem.file_url = fileUrl;
+                    dbItem.file_size = filesize;
+                    dbItem.file_mimetype = mimeType;
+                    dbItem.file_extention = fileExtension;
+
+                    if (file.Id == 0)
+                    {
+                        // Creating new feedback document
+
+                        dbItem.created_at = DateTime.Now;
+                        dbItem.updated_at = DateTime.Now;
+                        dbItem.isdeleted = false;
+
+                        _fileManagerService.AddFeedbackDoc(dbItem);
+                        toReturn.Add(dbItem);
+                    }
+                    else
+                    {
+                        // Updating existing feedback document
+                        dbItem.updated_at = DateTime.Now;
+                        dbItem.isdeleted = file.isdeleted;
+
+                        _fileManagerService.UpdateFeedbackDoc(dbItem);
+                        toReturn.Add(dbItem);
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unhandled exception from FileManagerController.PostDocsForFeedback");
+                    return Problem("Unable to process the post of feedback documents.");
                 }
             }
 

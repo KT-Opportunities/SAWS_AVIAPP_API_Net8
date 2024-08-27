@@ -10,14 +10,7 @@ using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.FileProviders;
 
-/*var options = new WebApplicationOptions
-{
-    ContentRootPath = AppContext.BaseDirectory,
-    WebRootPath = "Uploads" // Set the custom web root path here
-};*/
-
 var builder = WebApplication.CreateBuilder(args);
-// var builder = WebApplication.CreateBuilder(options);
 
 var connectionString = builder.Configuration.GetConnectionString("ConnStr") ?? throw new InvalidOperationException("Connection string 'ConnStr' not found.");
 
@@ -40,24 +33,12 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddDbContext<SAWSDbContext>(options =>
 {
-    options.UseSqlServer(connectionString,
-    sqlServerOptionsAction: sqlOptions =>
-    {
-        sqlOptions.MigrationsAssembly(
-            typeof(Program).GetTypeInfo().Assembly.GetName().Name);
-
-        //Configuring Connection Resiliency:
-        sqlOptions.
-            EnableRetryOnFailure(maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
-    });
+    options.UseSqlServer(connectionString);
 });
 
 // add/setup Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Custom password policy settings
     options.Password.RequiredLength = 4;
     options.Password.RequireDigit = false;
     options.Password.RequireNonAlphanumeric = false;
@@ -80,10 +61,10 @@ builder.Services.AddAuthentication(options =>
                 options.RequireHttpsMetadata = false;
                 options.TokenValidationParameters = new TokenValidationParameters()
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
                     // ValidateLifetime = true,
                     // ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     ValidAudience = builder.Configuration["JWT:ValidAudience"],
                     ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
@@ -127,7 +108,7 @@ builder.Logging.AddConsole();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>
@@ -164,11 +145,11 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
-app.UseStaticFiles(new StaticFileOptions
+/*app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
     RequestPath = "/Uploads"
-});
+});*/
 
 app.UseCors(DefaultCorsPolicy);
 

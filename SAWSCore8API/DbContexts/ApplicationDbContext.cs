@@ -87,8 +87,6 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
             );
     }
 
-    /*public DbSet<TodoItem> TodoItems { get; set; } = null!;*/
-
     public DbSet<ApplicationUser> User { get; set; }
     public DbSet<UserProfile> userProfiles { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }

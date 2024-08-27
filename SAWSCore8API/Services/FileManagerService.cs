@@ -71,6 +71,34 @@ namespace SAWSCore8API.Services
 
         }
 
+        public DocFeedback AddFeedbackDoc(DocFeedback file)
+        {
+
+            try
+            {
+                var clpExist = _context.DocFeedbacks.FirstOrDefault(f => (f.feedbackMessageId == file.feedbackMessageId) && (f.DocTypeName == file.DocTypeName));
+
+                if (clpExist == null)
+                {
+                    _context.DocFeedbacks.Add(file);
+                    Save();
+                }
+                else
+                {
+                    _logger.LogWarning("Document feedback exists");
+                }
+
+                return file;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error with adding doc feedback");
+                throw;
+            }
+
+        }
+
         public DocAdvert UpdateAdvertDoc(DocAdvert file)
         {
             try
@@ -103,6 +131,43 @@ namespace SAWSCore8API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error with adding doc advert");
+                throw;
+            }
+
+        }
+
+        public DocFeedback UpdateFeedbackDoc(DocFeedback file)
+        {
+            try
+            {
+                var clpExist = _context.DocFeedbacks.FirstOrDefault(f => (f.feedbackMessageId == file.feedbackMessageId) && (f.DocTypeName == file.DocTypeName));
+
+                if (clpExist != null)
+                {
+                    file.isdeleted = false;
+
+                    var local = _context.Set<DocFeedback>()
+                    .Local
+                    .FirstOrDefault(f => (f.feedbackMessageId == file.feedbackMessageId) && (f.DocTypeName == file.DocTypeName));
+
+                    if (local != null)
+                    {
+                        _context.Entry(local).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                    }
+                    _context.Entry(file).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+
+                    Save();
+
+                }
+                else
+                {
+                    _logger.LogWarning("Document feedback with not found");
+                }
+                return file;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error with adding doc feedback");
                 throw;
             }
 

@@ -238,7 +238,6 @@ namespace SAWSCore8API.Controllers
             }
         }
 
-
         [HttpGet("GetAdvertByAdvertId")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Advert))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
