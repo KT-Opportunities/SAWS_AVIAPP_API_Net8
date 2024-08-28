@@ -79,7 +79,8 @@ namespace SAWSCore8API.Controllers
                 try
                 {
                     var folderId = Convert.ToString(file.advertId);
-                    var rootPath = Path.Combine(_environment.ContentRootPath, "Uploads");
+                    var root = _configuration["rootPath"];
+                    var rootPath = Path.Combine(root, "Uploads");
                     string path = Path.Combine(rootPath, rootPath + "\\Advert\\" + folderId + "\\");
                     if (!Directory.Exists(path))
                     {
@@ -172,7 +173,8 @@ namespace SAWSCore8API.Controllers
                 try
                 {
                     var folderId = Convert.ToString(file.feedbackMessageId);
-                    var rootPath = Path.Combine(_environment.ContentRootPath, "Uploads");
+                    var root = _configuration["rootPath"];
+                    var rootPath = Path.Combine(root, "Uploads");
                     string path = Path.Combine(rootPath, rootPath + "\\Feedback\\" + folderId + "\\");
                     if (!Directory.Exists(path))
                     {
