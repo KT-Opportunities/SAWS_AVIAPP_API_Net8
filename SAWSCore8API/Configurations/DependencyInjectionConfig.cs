@@ -12,7 +12,7 @@ namespace SAWSCore8API.Configurations
             services.AddScoped<IFileManagerService, FileManagerService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<ISawsService, SawsService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddTransient<IEmailService, EmailService>();
 
             services.AddSingleton<IUriService>(o =>
             {

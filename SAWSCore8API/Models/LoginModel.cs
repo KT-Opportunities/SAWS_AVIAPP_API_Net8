@@ -2,7 +2,7 @@
 
 namespace SAWSCore8API.Models;
 
-public class Login
+public class LoginModel
 {
     [Required(ErrorMessage = "User Name is required")]
     public string Username { get; set; }

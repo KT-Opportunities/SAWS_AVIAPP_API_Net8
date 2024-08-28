@@ -13,6 +13,8 @@ using System.Text;
 using System.Configuration;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 
 namespace SAWSCore8API.Services
 {
@@ -46,13 +48,14 @@ namespace SAWSCore8API.Services
             _signInManager = signInManager;
             _roleManager = roleManager;
             _logger = logger;
+            // _emailService = emailService;
         }
 
-        public async Task<LoginResult> LoginUser(Login appUser)
+        public async Task<LoginResult> LoginUser(LoginModel appUser)
         {
             var user = _context.User
-    .Where(u => u.UserName == appUser.Username || u.Email == appUser.Username)
-    .SingleOrDefault();
+                    .Where(u => u.UserName == appUser.Username || u.Email == appUser.Username)
+                    .SingleOrDefault();
 
             if (user == null)
             {
@@ -85,7 +88,6 @@ namespace SAWSCore8API.Services
             var roles = (List<string>)userRoles;
 
             //model.RememberMe
-
             var signInResult = await _signInManager.PasswordSignInAsync(user, appUser.Password, false, false);
 
             if (signInResult.Succeeded)
@@ -224,7 +226,7 @@ namespace SAWSCore8API.Services
                 freeSubscription.end_date = DateTime.Now.AddYears(1);
                 freeSubscription.subscription_duration = 365;
                 freeSubscription.subscription_token = "";
-                freeSubscription.isactive = true; 
+                freeSubscription.isactive = true;
                 freeSubscription.created_at = DateTime.Now;
                 freeSubscription.updated_at = DateTime.Now;
                 freeSubscription.isdeleted = false;
@@ -232,20 +234,20 @@ namespace SAWSCore8API.Services
                 _context.Subscriptions.Add(freeSubscription);
                 Save();
 
-              /*  using var transaction = await _context.Database.BeginTransactionAsync();
-                try
-                {
-                    _context.userProfiles.Add(userProfile);
-                    _context.Subscriptions.Add(freeSubscription);
-                    Save();
-                    await transaction.CommitAsync();
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, "Unhandled exception from AuthenticateService.AddSubscriberUserProfile");
-                    return CreateResult.FailureResult("Unable to process the commit to database.");
-                }*/
+                /*  using var transaction = await _context.Database.BeginTransactionAsync();
+                  try
+                  {
+                      _context.userProfiles.Add(userProfile);
+                      _context.Subscriptions.Add(freeSubscription);
+                      Save();
+                      await transaction.CommitAsync();
+                  }
+                  catch (Exception ex)
+                  {
+                      await transaction.RollbackAsync();
+                      _logger.LogError(ex, "Unhandled exception from AuthenticateService.AddSubscriberUserProfile");
+                      return CreateResult.FailureResult("Unable to process the commit to database.");
+                  }*/
 
 
                 return CreateResult.SuccessResult(userProfile.userprofileid);
@@ -334,9 +336,79 @@ namespace SAWSCore8API.Services
             }
         }
 
+        public async Task<RequestPasswordResult> RequestPasswordReset(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user != null)
+            {
+                if (!user.IsActive)
+                {
+                    return RequestPasswordResult.FailureResult("Email account is deactivated, please contact administration");
+                }
+                else
+                {
+                    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                    //Generate email with the new token
+                    byte[] resetTokenGeneratedBytes = Encoding.UTF8.GetBytes(resetToken);
+                    var validResetToken = Uri.EscapeDataString(WebEncoders.Base64UrlEncode(resetTokenGeneratedBytes));
+
+                    var app_url = _configuration["AppURL"];
+
+                    string resetUrl = app_url + @"#/reset-password?email=" + email + "&token=" + validResetToken;
+
+                    string resetEmailBody = $"<h1>South African Weather Service</h1>" + $"<p>to reset your password <a href='{resetUrl}'>Click here</a></p>";
+
+                    try
+                    {
+                        EmailService emailService = new EmailService(_configuration);
+                        emailService.SendPasswordResetEmail(user.Email, resetEmailBody);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error with sending reset password email {user.Email}");
+                        throw;
+                    }
+
+                    return RequestPasswordResult.SuccessResult($"Reset details sent to {user.Email}");
+                }
+            }
+            else
+            {
+                return RequestPasswordResult.FailureResult("Email does not exist");
+            }
+        }
+
+        public async Task<RequestPasswordResult> ResetPassword(IDResetPassword reset)
+        {
+            var user = await _userManager.FindByEmailAsync(reset.email);
+
+            if (user != null)
+            {
+                var decodedResetToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(reset.token));
+
+                var result = await _userManager.ResetPasswordAsync(user, decodedResetToken, reset.newPassword);
+
+                if (result.Succeeded)
+                {
+                    return RequestPasswordResult.SuccessResult($"Password reset successful for {user.Email}");
+                }
+                else
+                {
+                    return RequestPasswordResult.FailureResult("Password reset not successful");
+                }
+
+            }
+            else
+            {
+                return RequestPasswordResult.FailureResult("Email does not exist");
+            }
+        }
+
         public async Task<DeleteResult> DeleteUserProfileById(int id)
-         {
-             var user = _context.userProfiles.First(a => a.userprofileid == id);
+        {
+            var user = _context.userProfiles.First(a => a.userprofileid == id);
 
             user.isdeleted = true;
             user.isactive = false;
@@ -365,7 +437,6 @@ namespace SAWSCore8API.Services
             }
 
         }
-
 
         public void Save()
         {

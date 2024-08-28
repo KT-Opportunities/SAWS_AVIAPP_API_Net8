@@ -50,7 +50,7 @@ namespace SAWSCore8API.Controllers
         #endregion
 
         [HttpPost("Login")]
-        public async Task<IActionResult> Login(Login appUser)
+        public async Task<IActionResult> Login(LoginModel appUser)
         {
 
             if (!ModelState.IsValid)
@@ -307,6 +307,92 @@ namespace SAWSCore8API.Controllers
             {
                 _logger.LogError(ex, "Unhandled exception from AuthenticateController.LoginEmailExist");
                 return Problem("Unable to get LoginEmailExist result");
+            }
+        }
+
+        [HttpPost("RequestPasswordReset")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> RequestPasswordReset(string email)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            try
+            {
+                var result = await _authenticateService.RequestPasswordReset(email);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new UnauthorizedObjectResult(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.RequestPasswordReset");
+                return Problem("Unable to get Request Password Reset result");
+
+            }
+        }
+
+        [HttpPost("ResetPassword")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> ResetPassword([FromBody] IDResetPassword reset)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            try
+            {
+                var result = await _authenticateService.ResetPassword(reset);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new UnauthorizedObjectResult(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.ResetPassword");
+                return Problem("Unable to reset password");
+
             }
         }
 

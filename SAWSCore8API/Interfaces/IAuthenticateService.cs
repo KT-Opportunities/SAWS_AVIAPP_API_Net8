@@ -5,7 +5,7 @@ namespace SAWSCore8API.Interfaces
 {
     public interface IAuthenticateService
     {
-        Task<LoginResult> LoginUser(Login appUser);
+        Task<LoginResult> LoginUser(LoginModel appUser);
         Task<CreateResult> AddAdminUserProfile(RegisterAdmin appUser);
         Task<CreateResult> AddSubscriberUserProfile(RegisterSubscriber appUser);
         Task<UpdateResult> UpdateUserProfile(UserProfile user);
@@ -13,6 +13,8 @@ namespace SAWSCore8API.Interfaces
         Task<DeleteResult> DeleteUserProfileById(int id);
         Task<LoggedInResult> GetLoggedInUser(string id);
         Task<LoginExistResult> LoginEmailExist(string email);
+        Task<RequestPasswordResult> RequestPasswordReset(string email);
+        Task<RequestPasswordResult> ResetPassword(IDResetPassword reset);
         void Save();
     }
 }
