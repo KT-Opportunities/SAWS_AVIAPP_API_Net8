@@ -14,7 +14,7 @@ namespace SAWSCore8API.Controllers
 
         #region Fields
         private readonly SAWSDbContext _context;
-        private readonly ISawsService _sawsService;
+        private readonly IPagedService _pagedService;
         private readonly IAdvertService _advertService;
         private ILogger<AdvertsController> _logger;
         public IConfiguration _configuration { get; }
@@ -25,14 +25,14 @@ namespace SAWSCore8API.Controllers
 
         public AdvertsController(
             SAWSDbContext context,
-            ISawsService sawsService,
+            IPagedService pagedService,
             IAdvertService advertService,
             ILogger<AdvertsController> logger,
             IConfiguration configuration
             )
         {
             _context = context;
-            _sawsService = sawsService;
+            _pagedService = pagedService;
             _advertService = advertService;
             _logger = logger;
             _configuration = configuration;
@@ -54,7 +54,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var pagedAdverts = await _sawsService.GetPagedAllAdverts(filter);
+                var pagedAdverts = await _pagedService.GetPagedAllAdverts(filter);
                 return new OkObjectResult(pagedAdverts);
 
             }

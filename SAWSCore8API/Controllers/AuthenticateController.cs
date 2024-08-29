@@ -6,8 +6,6 @@ using SAWSCore8API.Interfaces;
 using SAWSCore8API.Dtos;
 using System.Net.Mime;
 using SAWSCore8API.Dto;
-using SAWSCore8API.Services;
-using Microsoft.AspNetCore.Authorization;
 using System.Data;
 
 namespace SAWSCore8API.Controllers

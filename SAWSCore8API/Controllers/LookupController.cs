@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SAWSCore8API.Models;
 using SAWSCore8API.Interfaces;
-using SAWSCore8API.DbContexts;
 
 namespace SAWSCore8API.Controllers
 {

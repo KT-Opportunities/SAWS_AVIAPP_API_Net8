@@ -3,20 +3,19 @@ using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
 using SAWSCore8API.Configurations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using SAWSCore8API.Dtos;
 
 namespace SAWSCore8API.Services
 {
-    public class SawsService : ISawsService
+    public class PagedService : IPagedService
     {
         private readonly SAWSDbContext _context;
         private readonly IUriService _uriService;
 
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SawsService(SAWSDbContext context, IUriService uriService, IHttpContextAccessor httpContextAccessor)
+        public PagedService(SAWSDbContext context, IUriService uriService, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _uriService = uriService;

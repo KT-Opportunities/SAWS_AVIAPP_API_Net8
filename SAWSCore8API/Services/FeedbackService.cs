@@ -1,11 +1,7 @@
 ﻿using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 
 namespace SAWSCore8API.Services

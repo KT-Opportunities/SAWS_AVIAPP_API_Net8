@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SAWSCore8API.Interfaces
 {
-    public interface ISawsService
+    public interface IPagedService
     {
         Task<ResponseModel<List<UserProfileDto>>> GetPagedAllUsers([FromQuery] PaginationFilter filter, string role);
 

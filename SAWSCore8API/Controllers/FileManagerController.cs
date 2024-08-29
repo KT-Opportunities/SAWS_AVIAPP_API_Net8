@@ -1,10 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
 using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
@@ -21,7 +15,7 @@ namespace SAWSCore8API.Controllers
         #region Fields
 
         private readonly SAWSDbContext _context;
-        private readonly ISawsService _sawsService;
+        private readonly IPagedService _pagedService;
         private readonly IFileManagerService _fileManagerService;
         private ILogger<FileManagerController> _logger;
         private IWebHostEnvironment _environment;
@@ -34,7 +28,7 @@ namespace SAWSCore8API.Controllers
 
         public FileManagerController(
             SAWSDbContext context,
-            ISawsService sawsService,
+            IPagedService pagedService,
             IFileManagerService fileManagerService,
             ILogger<FileManagerController> logger,
             IConfiguration configuration,
@@ -42,7 +36,7 @@ namespace SAWSCore8API.Controllers
         )
         {
             _context = context;
-            _sawsService = sawsService;
+            _pagedService = pagedService;
             _fileManagerService = fileManagerService;
             _logger = logger;
             _configuration = configuration;
@@ -241,39 +235,6 @@ namespace SAWSCore8API.Controllers
 
         }
 
-
         #endregion
-
-        // GET: api/<FileManagerController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/<FileManagerController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/<FileManagerController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<FileManagerController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<FileManagerController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }

@@ -11,7 +11,7 @@ namespace SAWSCore8API.Controllers
     {
 
         #region Fields
-        private readonly ISawsService _sawsService;
+        private readonly IPagedService _pagedService;
         private readonly SAWSDbContext _context;
         private ILogger<SubscribersController> _logger;
 
@@ -20,12 +20,12 @@ namespace SAWSCore8API.Controllers
         #region Constructors
         public SubscribersController(
             SAWSDbContext context,
-            ISawsService sawsService,
+            IPagedService pagedService,
             ILogger<SubscribersController> logger
         )
         {
             _context = context;
-            _sawsService = sawsService;
+            _pagedService = pagedService;
             _logger = logger;
         }
 
@@ -47,7 +47,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var pagedSubscribers = await _sawsService.GetPagedAllUsers(filter, role);
+                var pagedSubscribers = await _pagedService.GetPagedAllUsers(filter, role);
                 return new OkObjectResult(pagedSubscribers);
 
             }

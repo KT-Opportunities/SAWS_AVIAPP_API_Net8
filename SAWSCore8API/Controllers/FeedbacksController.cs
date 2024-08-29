@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
@@ -14,7 +13,7 @@ namespace SAWSCore8API.Controllers
     {
 
         #region Fields
-        private readonly ISawsService _sawsService;
+        private readonly IPagedService _pagedService;
         private readonly IFeedbackService _feedbackService;
         private readonly SAWSDbContext _context;
         private ILogger<FeedbacksController> _logger;
@@ -26,14 +25,14 @@ namespace SAWSCore8API.Controllers
 
         public FeedbacksController(
             SAWSDbContext context,
-            ISawsService sawsService,
+            IPagedService pagedService,
             IFeedbackService feedbackService,
             ILogger<FeedbacksController> logger,
              IConfiguration configuration
         )
         {
             _context = context;
-            _sawsService = sawsService;
+            _pagedService = pagedService;
             _feedbackService = feedbackService;
             _logger = logger;
             _configuration = configuration;
@@ -55,7 +54,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var pagedFeedbacks = await _sawsService.GetPagedAllFeedbacks(filter);
+                var pagedFeedbacks = await _pagedService.GetPagedAllFeedbacks(filter);
                 return new OkObjectResult(pagedFeedbacks);
 
             }
@@ -78,7 +77,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var pagedFeedbacks = await _sawsService.GetPagedAllFeedbacksByUniqueEmail(filter);
+                var pagedFeedbacks = await _pagedService.GetPagedAllFeedbacksByUniqueEmail(filter);
                 return new OkObjectResult(pagedFeedbacks);
 
             }
@@ -101,7 +100,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var pagedBroadcasts = await _sawsService.GetPagedAllBroadcasts(filter);
+                var pagedBroadcasts = await _pagedService.GetPagedAllBroadcasts(filter);
                 return new OkObjectResult(pagedBroadcasts);
 
             }

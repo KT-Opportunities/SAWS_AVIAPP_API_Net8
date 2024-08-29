@@ -1,11 +1,6 @@
 ﻿using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
-using SAWSCore8API.Configurations;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using SAWSCore8API.Controllers;
 
 namespace SAWSCore8API.Services
 {
