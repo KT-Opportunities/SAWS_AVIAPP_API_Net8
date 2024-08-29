@@ -8,6 +8,7 @@ namespace SAWSCore8API.Configurations
         public static IServiceCollection ResolveDependencies(this IServiceCollection services)
         {
             services.AddScoped<IAdvertService, AdvertService>();
+            services.AddScoped<ILookupService, LookupService>();
             services.AddScoped<IAuthenticateService, AuthenticateService>();
             services.AddScoped<IFileManagerService, FileManagerService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
