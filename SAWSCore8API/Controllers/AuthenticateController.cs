@@ -394,6 +394,49 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        [HttpPost("SendCredentials")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> SendCredentials([FromBody] IDCredentials credentials)
+        {
+
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            try
+            {
+                var result = await _authenticateService.SendLogInCredentialsEmail(credentials);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new UnauthorizedObjectResult(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from AuthenticateController.SendCredentials");
+                return Problem("Unable to send login credentials");
+
+            }
+        }
+
         // [HttpPost("InsertUpdateUserProfile")]
         // [Consumes(MediaTypeNames.Application.Json)]
         // [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(UserProfile))]

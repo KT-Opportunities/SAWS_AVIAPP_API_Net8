@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace SAWSCore8API.Models
 {
-    public class RequestPasswordResult
+    public class CreatePasswordResult
     {
         public bool Success { get; set; }
         // public string resetUrl { get; set; }
@@ -10,18 +10,18 @@ namespace SAWSCore8API.Models
         public string SuccessMessage{ get; set; }
         public string ErrorMessage { get; set; }
 
-        public static RequestPasswordResult SuccessResult(string SuccessMessage)
+        public static CreatePasswordResult SuccessResult(string SuccessMessage)
         {
-            return new RequestPasswordResult
+            return new CreatePasswordResult
             {
                 Success = true,
                 SuccessMessage = SuccessMessage
             };
         }
 
-        public static RequestPasswordResult FailureResult(string errorMessage)
+        public static CreatePasswordResult FailureResult(string errorMessage)
         {
-            return new RequestPasswordResult
+            return new CreatePasswordResult
             {
                 Success = false,
                 ErrorMessage = errorMessage

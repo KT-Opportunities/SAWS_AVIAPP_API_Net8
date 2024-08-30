@@ -329,7 +329,7 @@ namespace SAWSCore8API.Services
             }
         }
 
-        public async Task<RequestPasswordResult> RequestPasswordReset(string email)
+        public async Task<CreatePasswordResult> RequestPasswordReset(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -337,7 +337,7 @@ namespace SAWSCore8API.Services
             {
                 if (!user.IsActive)
                 {
-                    return RequestPasswordResult.FailureResult("Email account is deactivated, please contact administration");
+                    return CreatePasswordResult.FailureResult("Email account is deactivated, please contact administration");
                 }
                 else
                 {
@@ -364,16 +364,42 @@ namespace SAWSCore8API.Services
                         throw;
                     }
 
-                    return RequestPasswordResult.SuccessResult($"Reset details sent to {user.Email}");
+                    return CreatePasswordResult.SuccessResult($"Reset details sent to {user.Email}");
                 }
             }
             else
             {
-                return RequestPasswordResult.FailureResult("Email does not exist");
+                return CreatePasswordResult.FailureResult("Email does not exist");
             }
         }
 
-        public async Task<RequestPasswordResult> ResetPassword(IDResetPassword reset)
+        public async Task<CreatePasswordResult> SendLogInCredentialsEmail(IDCredentials credentials)
+        {
+            //Generate email          
+            var app_url = _configuration["AppURL"];
+            string loginUrl = app_url + @"#/login";
+            string resetEmailBody = $"<h1>South African Weather Service</h1>"
+                + $"<p>Your login credentials are as follows:</p>"
+                + $"<p><strong>Username:</strong> {credentials.username}</p>"
+                + $"<p><strong>Password:</strong> {credentials.password}</p>"
+                + $"<p>You can log in by clicking <a href='{loginUrl}'>here</a>.</p>"
+                + "<p>If you did not request these credentials, please contact support.</p>";
+
+            try
+            {
+                EmailService emailService = new EmailService(_configuration);
+                emailService.SendLogInCredentialsEmail(credentials.username, resetEmailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error with sending login credentials to {credentials.username}");
+                throw;
+            }
+
+            return CreatePasswordResult.SuccessResult($"Login credentials sent to {credentials.username}");
+        }
+
+        public async Task<CreatePasswordResult> ResetPassword(IDResetPassword reset)
         {
             var user = await _userManager.FindByEmailAsync(reset.email);
 
@@ -385,17 +411,17 @@ namespace SAWSCore8API.Services
 
                 if (result.Succeeded)
                 {
-                    return RequestPasswordResult.SuccessResult($"Password reset successful for {user.Email}");
+                    return CreatePasswordResult.SuccessResult($"Password reset successful for {user.Email}");
                 }
                 else
                 {
-                    return RequestPasswordResult.FailureResult("Password reset not successful");
+                    return CreatePasswordResult.FailureResult("Password reset not successful");
                 }
 
             }
             else
             {
-                return RequestPasswordResult.FailureResult("Email does not exist");
+                return CreatePasswordResult.FailureResult("Email does not exist");
             }
         }
 

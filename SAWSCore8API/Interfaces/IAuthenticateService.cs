@@ -13,8 +13,9 @@ namespace SAWSCore8API.Interfaces
         Task<DeleteResult> DeleteUserProfileById(int id);
         Task<LoggedInResult> GetLoggedInUser(string id);
         Task<LoginExistResult> LoginEmailExist(string email);
-        Task<RequestPasswordResult> RequestPasswordReset(string email);
-        Task<RequestPasswordResult> ResetPassword(IDResetPassword reset);
+        Task<CreatePasswordResult> RequestPasswordReset(string email);
+        Task<CreatePasswordResult> ResetPassword(IDResetPassword reset);
+        Task<CreatePasswordResult> SendLogInCredentialsEmail(IDCredentials credentials);
         void Save();
     }
 }

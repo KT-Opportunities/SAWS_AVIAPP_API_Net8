@@ -33,7 +33,6 @@ namespace SAWSCore8API.Services
 
             _appSettings = settings;
             _configuration = configuration;
-
         }
 
         public EmailService(IOptions<SmptSetting> appSettings, IConfiguration configuration)
@@ -69,7 +68,6 @@ namespace SAWSCore8API.Services
                 throw new Exception("Error reading email settings");
             }
 
-
             try
             {
                 var mailMessage = new MimeMessage();
@@ -89,14 +87,48 @@ namespace SAWSCore8API.Services
                     smtpClient.Send(mailMessage);
                     smtpClient.Disconnect(true);
                 }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error occurred while sending password reset details.", ex);
+            }
+        }
+
+
+        public void SendLogInCredentialsEmail(string to, string htmlBody)
+        {
+            if (_appSettings == null)
+            {
+                throw new Exception("Error reading email settings");
+            }
+
+            try
+            {
+                var mailMessage = new MimeMessage();
+                mailMessage.From.Add(new MailboxAddress("South African Weather Service", _appSettings.from));
+                mailMessage.To.Add(new MailboxAddress(to, to));
+                mailMessage.Subject = "South African Weather Service login credentials";
+
+                mailMessage.Body = new TextPart("html")
+                {
+                    Text = htmlBody
+                };
+
+                using (var smtpClient = new SmtpClient())
+                {
+                    smtpClient.Connect(_appSettings.host, _appSettings.Port, _appSettings.enableSsl);
+                    smtpClient.Authenticate(_appSettings.userName, _appSettings.Password);
+                    smtpClient.Send(mailMessage);
+                    smtpClient.Disconnect(true);
+                }
 
             }
-            catch (Exception err)
+            catch (Exception ex)
             {
+                throw new Exception("Error with sending login credentials", ex);
 
             }
 
         }
-
     }
 }
