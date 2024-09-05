@@ -7,10 +7,13 @@ namespace SAWSCore8API.Configurations
     {
         public static IServiceCollection ResolveDependencies(this IServiceCollection services)
         {
+            // Register HttpClient
+            services.AddHttpClient();
             services.AddScoped<IAdvertService, AdvertService>();
             services.AddScoped<ILookupService, LookupService>();
             services.AddScoped<IAuthenticateService, AuthenticateService>();
             services.AddScoped<IFileManagerService, FileManagerService>();
+            services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IPagedService, PagedService>();
             services.AddTransient<IEmailService, EmailService>();

@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 
 using SAWSCore8API.Models;
 using SAWSCore8API.Interfaces;
+using MailKit.Security;
 
 namespace SAWSCore8API.Services
 {
@@ -24,9 +25,8 @@ namespace SAWSCore8API.Services
                 settings.userName = configuration["SmptSettings:userName"];
                 settings.Password = configuration["SmptSettings:Password"];
                 settings.regUrl = configuration["AppURL"] + "#/register";
-                settings.enableSsl = true;
-                settings.Port = 465;
-
+                settings.enableSsl = bool.Parse(configuration["SmptSettings:EnableSsl"]);
+                settings.Port = int.Parse(configuration["SmptSettings:Port"]);
                 settings.host = configuration["SmptSettings:host"];
                 settings.applicationUrl = configuration["SmptSettings:applicationUrl"];
             }
@@ -35,27 +35,27 @@ namespace SAWSCore8API.Services
             _configuration = configuration;
         }
 
-        public EmailService(IOptions<SmptSetting> appSettings, IConfiguration configuration)
-        {
-            var settings = appSettings.Value;
+        // public EmailService(IOptions<SmptSetting> appSettings, IConfiguration configuration)
+        // {
+        //     var settings = appSettings.Value;
 
-            if (settings.userName == null)
-            {
+        //     if (settings.userName == null)
+        //     {
 
-                settings.from = "notifications@j-cred.co.za";
-                settings.userName = "notifications@j-cred.co.za";
-                settings.Password = "M@nagem3nt";
-                settings.regUrl = "https://app.j-cred.co.za/#/register";
-                settings.enableSsl = true;
-                settings.Port = 465;
+        //         settings.from = "notifications@weathersa.co.za";
+        //         settings.userName = "notifications@weathersa.co.za";
+        //         // settings.Password = "M@nagem3nt";
+        //         settings.regUrl = "https://www.weathersa.co.za/#/register";
+        //         settings.enableSsl = true;
+        //         settings.Port = 25;
 
-                settings.host = "mail.j-cred.co.za";
-            }
+        //         settings.host = "smtp.weathersa.co.za";
+        //     }
 
-            _appSettings = settings;
-            _configuration = configuration;
+        //     _appSettings = settings;
+        //     _configuration = configuration;
 
-        }
+        // }
 
         public void Send(string to, string orgname, string fname, string lname)
         { 
@@ -82,8 +82,9 @@ namespace SAWSCore8API.Services
 
                 using (var smtpClient = new SmtpClient())
                 {
+                    //smtpClient.Connect(_appSettings.host, _appSettings.Port, SecureSocketOptions.StartTls
                     smtpClient.Connect(_appSettings.host, _appSettings.Port, _appSettings.enableSsl);
-                    smtpClient.Authenticate(_appSettings.userName, _appSettings.Password);
+                    //smtpClient.Authenticate(_appSettings.userName, _appSettings.Password);
                     smtpClient.Send(mailMessage);
                     smtpClient.Disconnect(true);
                 }

@@ -15,6 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("ConnStr") ?? throw new InvalidOperationException("Connection string 'ConnStr' not found.");
 
 builder.Services.ResolveDependencies();
+// Register HttpClient
+// builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 
 const string DefaultCorsPolicy = "DefaultCorsPolicy";
