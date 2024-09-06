@@ -6,15 +6,7 @@ namespace SAWSCore8API.Interfaces
 {
     public interface IRawSourceService
     {
-        Task<CreateResult> CreateSubscription(Subscription subscription);
-        //Task<CreateSubscriptionResult> RecuringPayment(Payment request);
-        //Task<CreateSubscriptionResult> OnceOffPayment(Payment request);
-        //Task<CreateSubscriptionResult> AdHocPayment(Payment request);
-        //Task<NotifyResult> NotifyITN(PayFastNotify payFastNotify);
-        //Task<UpdateResult> CancelSubscription(string token);
-        //Task<UpdateResult> UpdateSubscription(Subscription subscription);
-        //Task<DeleteResult> DeleteSubscriptionById(int id);
-        //Subscription GetSubscriptionById(int id);
-        //void Save();
+        Task<GetRawFile> GetFile(string filePath, string imagefoldername);
+        IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername, int lasthours);
     }
 }

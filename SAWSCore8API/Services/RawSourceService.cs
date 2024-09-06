@@ -1,18 +1,6 @@
 ﻿using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System.Net;
-
-using PayFast;
-using PayFast.AspNetCore;
-using Newtonsoft.Json;
-using System.Net.Http;
-using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
-using System.Web;
 
 namespace SAWSCore8API.Services
 {
@@ -42,18 +30,58 @@ namespace SAWSCore8API.Services
             _httpClient = httpClient ?? new HttpClient();
         }
 
-        public Task<CreateResult> CreateSubscription(Subscription subscription)
+        public async Task<GetRawFile> GetFile(string filePath, string imagefoldername)
         {
-            subscription.created_at = DateTime.Now;
-            subscription.updated_at = DateTime.Now;
-            subscription.isdeleted = false;
+            List<GetRawFile> textFiles = new List<GetRawFile>();
 
-            _context.Subscriptions.Add(subscription);
-           
+            FileInfo fileInfo = new FileInfo(filePath);
+            DateTime fileModDateTime = fileInfo.LastWriteTime;
 
-            return Task.FromResult(CreateResult.SuccessResult(subscription.subscriptionId));
+            string base64String = "";
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    await fileStream.CopyToAsync(memoryStream);
+                    memoryStream.Position = 0;
+                    base64String = Convert.ToBase64String(memoryStream.ToArray());
+                }
+            }
+
+            return GetRawFile.Result(fileInfo.Name, imagefoldername, fileModDateTime, base64String);
         }
 
-        
+        public IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername, int lasthours)
+        {
+            List<RawFile> textFiles = new List<RawFile>();
+            DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
+
+            var files = Directory.GetFiles(folderPath);
+
+            foreach (string filePath in files)
+            {
+                FileInfo fileInfo = new FileInfo(filePath);
+                DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                // Filter files based on modification time
+                // NB: Add this condition if the api is slow
+                if (fileModDateTime > fileAfterThisDateTime)
+                {
+                 RawFile rawFile = new RawFile
+                    {
+                        filename = fileInfo.Name,
+                        lastmodified = fileModDateTime,
+                        foldername = foldername
+                };
+                    textFiles.Add(rawFile);
+                }
+            }
+
+            textFiles = textFiles.OrderByDescending(d => d.lastmodified).ToList();
+
+            return textFiles;
+        }
+
+
     }
 }

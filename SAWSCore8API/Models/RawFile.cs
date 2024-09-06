@@ -3,7 +3,7 @@
 namespace SAWSCore8API.Models
 {
     [NotMapped]
-    public class TextFile
+    public class RawFile
     {
         public string foldername { get; set; }
         public string filename { get; set; }
