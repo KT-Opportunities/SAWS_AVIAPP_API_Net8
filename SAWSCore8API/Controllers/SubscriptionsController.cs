@@ -353,7 +353,6 @@ namespace SAWSCore8API.Controllers
                 {
                     return new BadRequestObjectResult(newNotifyResult);
                 }
-
             }
             catch (Exception ex)
             {
@@ -362,21 +361,52 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        [HttpPost("NotifyTest")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> NotifyTest([ModelBinder(BinderType = typeof(PayFastNotifyModelBinder))] PayFastNotify payFastNotifyViewModel)
+        {
+            if (payFastNotifyViewModel == null)
+            {
+                return new BadRequestObjectResult("Invalid PayFast notification received.");
+            }
+            return new OkObjectResult("Notify testing");
+        }
+
         [HttpPost("CancelSubscription")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CancelSubscription(string token)
+        public async Task<IActionResult> CancelSubscription(int subscriptionId)
         {
             try
             {
-                var activeSubscription = await _subscriptionService.CancelSubscription(token);
+                var activeSub = _subscriptionService.GetSubscriptionById(subscriptionId);
+
+                if (activeSub == null)
+                {
+                    return new NotFoundObjectResult("Subscription not found");
+                }
+
+                var activeSubscription = await _subscriptionService.CancelSubscription(activeSub.subscription_token);
+
+                activeSub.isactive = false;
+                var userId = activeSub.userprofileid;
 
                 if (activeSubscription.Success)
                 {
-                    return new OkObjectResult(activeSubscription);
-                }
+                    var updateSub = await _subscriptionService.UpdateSubscription(activeSub);
 
-                return new BadRequestObjectResult("No active subscription");
+                    if (updateSub.Success)
+                    {                        
+                        var addFreeSub = await _subscriptionService.CreateFreeSubscription(userId);
+
+                        if (addFreeSub.Success)
+                        {
+                            return new OkObjectResult(activeSubscription);
+                        }
+                    }
+                }
+                return new BadRequestObjectResult("No active subscription to cancel");
             }
             catch (Exception ex)
             {

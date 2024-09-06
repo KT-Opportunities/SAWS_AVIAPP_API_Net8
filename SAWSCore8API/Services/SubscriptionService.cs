@@ -49,6 +49,37 @@ namespace SAWSCore8API.Services
             return Task.FromResult(CreateResult.SuccessResult(subscription.subscriptionId));
         }
 
+        public Task<CreateResult> CreateFreeSubscription(int userId)
+        {
+
+            var user = _context.userProfiles.First(a => a.userprofileid == userId);
+
+            if (user == null)
+            {
+                return Task.FromResult(CreateResult.FailureResult("User is not found"));
+            }
+
+            Subscription freeSubscription = new Subscription();
+
+            freeSubscription.userprofileid = userId;
+            freeSubscription.package_name = user.userrole == "Admin" ? "Admin" : "monthly Free";
+            freeSubscription.package_id = 1;
+            freeSubscription.package_price = 0;
+            freeSubscription.start_date = DateTime.Now;
+            freeSubscription.end_date = DateTime.Now.AddYears(1);
+            freeSubscription.subscription_duration = 365;
+            freeSubscription.subscription_token = "";
+            freeSubscription.isactive = true;
+            freeSubscription.created_at = DateTime.Now;
+            freeSubscription.updated_at = DateTime.Now;
+            freeSubscription.isdeleted = false;
+            
+            _context.Subscriptions.Add(freeSubscription);
+            Save();
+
+            return Task.FromResult(CreateResult.SuccessResult(freeSubscription.subscriptionId));
+        }
+
         public Task<CreateSubscriptionResult> RecuringPayment(Payment request)
         {
             if (request != null)
@@ -215,111 +246,38 @@ namespace SAWSCore8API.Services
                     return await HandlePendingPayment();
                 default:
                     // Handle any other statuses
-                    return NotifyResult.FailureResult("Failed to get notifucation status");
+                    return NotifyResult.FailureResult("Failed to get notification status");
             }
         }
 
-        public async Task<UpdateResult> CancelSubscription(string token)
+        public async Task<CancelResult> CancelSubscription(string token)
         {
-            /* var activeSubscription = GetSubscriptionById(subId);
+            if (string.IsNullOrEmpty(token))
+            {
+                return CancelResult.FailureResult("No token provided");
+            }
 
-             if (activeSubscription == null)
-             {
-                 return UpdateResult.FailureResult("No active subscription");
-             }*/
-
-            /*activeSubscription.updated_at = DateTime.Now;
-            activeSubscription.isdeleted = false;
-            activeSubscription.isactive = false;*/
-
-            /*if (activeSubscription.subscription_token != "")
-            {*/
             this.payFastSettings.MerchantId = _configuration.GetValue<string>("payFast:merchant_id");
             this.payFastSettings.MerchantKey = _configuration.GetValue<string>("payFast:merchant_key");
-            this.payFastSettings.NotifyUrl = _configuration.GetValue<string>("payFast:NotifyUrl");
+            // this.payFastSettings.NotifyUrl = _configuration.GetValue<string>("payFast:NotifyUrl");
             this.payFastSettings.PassPhrase = _configuration.GetValue<string>("payFast:passphrase");
             bool istesting = _configuration.GetValue<bool>("payFast:isTesting");
 
-            var merchant_id = _configuration.GetValue<string>("payFast:merchant_id");
-            var merchant_key = _configuration.GetValue<string>("payFast:merchant_key");
-            var passphrase = _configuration.GetValue<string>("payFast:passphrase");
-            var api_version = "v1";
-
-            // Create the request body
-            var requestBody = new
+            var client = new HttpClient
             {
-                merchant_id = merchant_id
+                BaseAddress = new Uri("https://api.payfast.co.za/")
             };
 
-            //    var url = _configuration.GetValue<string>("payFast:endPoint");
+            var subscriptionCancellation = new PayFastIntegrationClient(client, Options.Create(payFastSettings));
 
-            //  var requestUri = $"{url}/subscriptions/{token}/cancel?testing=true";
+            var result = await subscriptionCancellation.Cancel(token, istesting);
 
-            //var jsonContent = JsonConvert.SerializeObject(requestBody);
-            //var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss");
-
-            // Collect all parameters
-            var parameters = new Dictionary<string, string>
+            if (result.status != "success")
             {
-                { "merchant-id", merchant_id },
-                { "timestamp", timestamp },
-                { "version", "v1" } // API version
-            };
-
-            // Generate the signature
-            var signature = GenerateSignature(parameters, passphrase);
-            //var signature = GenerateSignature(merchant_id, timestamp, passphrase);
-
-            /*var requestMessage = new HttpRequestMessage(HttpMethod.Put, requestUri)
-            {
-                Content = content
-            };
-
-            // Prepare the request message
-            requestMessage.Headers.Add("merchant-id", merchant_id);
-            requestMessage.Headers.Add("version", api_version);
-            requestMessage.Headers.Add("timestamp", timestamp);
-            requestMessage.Headers.Add("signature", signature);*/
-
-            // Send the PUT request to cancel the subscription
-            //var result = await _httpClient.SendAsync(requestMessage);
-
-            // Send the PUT request to cancel the subscription
-            //var response = await _httpClient.PutAsync(requestUri, content);
-
-            //var subscriptionCancellation = new PayFastSubscription(this.payFastSettings);
-            //var result = await subscriptionCancellation.Cancel(activeSubscription.subscription_token, istesting);
-
-            // Cancel payfast subscription
-            //if (result.status != "success")
-
-            var client = new HttpClient();
-            var request = new HttpRequestMessage(HttpMethod.Put, $"https://api.payfast.co.za/subscriptions/{token}/cancel?testing=true");
-            request.Headers.Add("merchant-id", merchant_id);
-            request.Headers.Add("version", "v1");
-            request.Headers.Add("timestamp", timestamp);
-            request.Headers.Add("signature", signature);
-
-            var response = await client.SendAsync(request);
-            // response.EnsureSuccessStatusCode();
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return UpdateResult.FailureResult("Did not cancel payfast subscription");
+                return CancelResult.FailureResult("Did not cancel payfast subscription");
             }
 
-            /*}
-
-            _context.Subscriptions.Update(activeSubscription);
-            Save();
-
-            return UpdateResult.SuccessResultUpdate(activeSubscription.subscriptionId);*/
-
-            // return UpdateResult.SuccessResultUpdate(activeSubscription.subscriptionId);
-            return UpdateResult.SuccessResultUpdate(100);
+            return CancelResult.SuccessResult("Successfully cancelled subscription");
         }
 
         public Task<UpdateResult> UpdateSubscription(Subscription subscription)
@@ -340,10 +298,10 @@ namespace SAWSCore8API.Services
                     .First();
         }
 
-        public Subscription GetActiveSubscriptionByUserProfileId(int id)
+        public Subscription GetActiveSubscriptionByUserProfileId(int userId)
         {
-            return _context.Subscriptions
-                    .Where(d => d.userprofileid == id && d.isactive)
+           return _context.Subscriptions
+                    .Where(d => d.userprofileid == userId && d.isactive)
                     .First();
         }
 
@@ -375,8 +333,6 @@ namespace SAWSCore8API.Services
                 return NotifyResult.FailureResult("Invalid integer value in custom fields");
             }
 
-            var activeSubscriptionResult = GetActiveSubscriptionByUserProfileId(userId);
-
             var newSubscription = new Subscription
             {
                 subscriptionId = 0,
@@ -390,6 +346,8 @@ namespace SAWSCore8API.Services
                 subscription_token = payFastNotify.token,
                 isactive = true
             };
+
+            var activeSubscriptionResult = GetActiveSubscriptionByUserProfileId(userId);
 
             if (activeSubscriptionResult == null)
             {
@@ -405,24 +363,51 @@ namespace SAWSCore8API.Services
                 }
             }
 
+            // Cancel PayFast
             var cancelActiveSubscriptionResult = await CancelSubscription(activeSubscriptionResult.subscription_token);
 
             if (cancelActiveSubscriptionResult.Success)
             {
+                // Paid active subscription
+
                 var newSubscriptionResult = await CreateSubscription(newSubscription);
 
                 if (newSubscriptionResult.Success)
                 {
-                    return NotifyResult.SuccessResult("Successfully updated subscription");
+                    // Update existing subscription
+                    activeSubscriptionResult.isactive = false;
+
+                    var updateSub = await UpdateSubscription(activeSubscriptionResult);
+
+                    if (updateSub.Success)
+                    {
+                        return NotifyResult.SuccessResult("Successfully updated paid subscription");
+                    }
                 }
-                else
-                {
-                    return NotifyResult.FailureResult("Failed to update subscription");
-                }
+                    return NotifyResult.FailureResult("Failed to update existing subscription");
             }
-            else
+            else if (!cancelActiveSubscriptionResult.Success && activeSubscriptionResult != null)
             {
-                return NotifyResult.FailureResult("Failed to add subscription to database");
+                // Free active subscription
+
+                var newSubscriptionResult = await CreateSubscription(newSubscription);
+
+                if (newSubscriptionResult.Success)
+                {
+                    // Update existing subscription
+                    activeSubscriptionResult.isactive = false;
+
+                    var updateSub = await UpdateSubscription(activeSubscriptionResult);
+
+                    if (updateSub.Success)
+                    {
+                        return NotifyResult.SuccessResult("Successfully updated free subscription");
+                    }
+                }
+                return NotifyResult.FailureResult("Failed to update existing subscription");
+            } else
+            {
+                return NotifyResult.FailureResult("Failed to perform subscriptions addition to database");
             }
         }
 
@@ -435,56 +420,7 @@ namespace SAWSCore8API.Services
         {
             return Task.FromResult(NotifyResult.FailureResult("Pending adding of subscription"));
         }
-        private string GenerateSignature(Dictionary<string, string> parameters)
-        {
-            // Sort the parameters alphabetically by key
-            var sortedParameters = parameters
-                .Where(p => !string.IsNullOrEmpty(p.Value)) // Exclude empty values
-                .OrderBy(p => p.Key)
-                .Select(p => $"{HttpUtility.UrlEncode(p.Key)}={HttpUtility.UrlEncode(p.Value)}");
-
-            // Concatenate sorted parameters
-            var concatenated = string.Join("&", sortedParameters);
-
-            // Generate the MD5 hash of the concatenated string
-            using (var md5 = MD5.Create())
-            {
-                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(concatenated));
-                return BitConverter.ToString(hash).Replace("-", "").ToLower();
-            }
-        }
-
-        public string GenerateSignature(Dictionary<string, string> data, string passphrase = "")
-        {
-            // Prepare the payload
-            var payload = new StringBuilder();
-            foreach (var key in data.Keys)
-            {
-                // Encode each key-value pair
-                var encodedValue = HttpUtility.UrlEncode(data[key].Replace("+", " ")); // Matching the Python replace logic
-                payload.Append($"{key}={encodedValue}&");
-            }
-
-            // Remove the trailing '&' character
-            if (payload.Length > 0)
-            {
-                payload.Length--; // Remove last '&'
-            }
-
-            // Add passphrase if provided
-            if (!string.IsNullOrEmpty(passphrase))
-            {
-                payload.Append($"&passphrase={passphrase}");
-            }
-
-            // Generate the MD5 hash
-            using (var md5 = MD5.Create())
-            {
-                var hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(payload.ToString()));
-                return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
-            }
-        }
-
+       
         public void Save()
         {
             _context.SaveChanges();

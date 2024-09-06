@@ -15,6 +15,7 @@ namespace SAWSCore8API.Configurations
             services.AddScoped<IFileManagerService, FileManagerService>();
             services.AddScoped<ISubscriptionService, SubscriptionService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
+            services.AddScoped<IRawSourceService, RawSourceService>();
             services.AddScoped<IPagedService, PagedService>();
             services.AddTransient<IEmailService, EmailService>();
 

@@ -8,6 +8,5 @@ namespace SAWSCore8API.Models
         public string foldername { get; set; }
         public string filename { get; set; }
         public DateTime? lastmodified { get; set; }
-        public string filetextcontent { get; set; }
     }
 }
