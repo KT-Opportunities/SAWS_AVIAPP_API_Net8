@@ -217,7 +217,7 @@ namespace SAWSCore8API.Controllers
             {
                 var adverts = _advertService.GetAllAdverts();
 
-                var app_url = _configuration["AppURL"];
+                var app_url = _configuration["AppURLServer"];
                 var host_location = _configuration["HostLocation"];
 
                 var toReturn = adverts.Select(ad => new AdvertDto
@@ -243,7 +243,7 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetAdvertByAdvertId(int id)
         {
-            var app_url = _configuration["AppURL"];
+            var app_url = _configuration["AppURLServer"];
             var host_location = _configuration["HostLocation"];
 
             try

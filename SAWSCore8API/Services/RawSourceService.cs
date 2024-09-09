@@ -53,7 +53,7 @@ namespace SAWSCore8API.Services
 
         public IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername)
         {
-            List<RawFile> textFiles = new List<RawFile>();
+            List<RawFile> rawFiles = new List<RawFile>();
             // DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
 
             var files = Directory.GetFiles(folderPath);
@@ -76,7 +76,43 @@ namespace SAWSCore8API.Services
                     lastmodified = fileModDateTime,
                     foldername = foldername
                 };
-                textFiles.Add(rawFile);
+                rawFiles.Add(rawFile);
+            }
+
+            rawFiles = rawFiles.OrderByDescending(d => d.lastmodified).ToList();
+
+            return rawFiles;
+        }
+
+        public IEnumerable<RawTextFile> GetTextSourceFolderFiles(string folderPath, string foldername)
+        {
+            List<RawTextFile> textFiles = new List<RawTextFile>();
+            // DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
+
+            var files = Directory.GetFiles(folderPath);
+
+            foreach (string filePath in files)
+            {
+                FileInfo fileInfo = new FileInfo(filePath);
+                DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                string textContents = "";
+                using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (StreamReader reader = new StreamReader(fileStream))
+                    {
+                        textContents = reader.ReadToEnd();
+                    }
+                }
+
+                RawTextFile textFile = new RawTextFile
+                {
+                    filename = fileInfo.Name,
+                    lastmodified = fileModDateTime,
+                    foldername = foldername,
+                    filecontent = textContents
+                };
+                textFiles.Add(textFile);
             }
 
             textFiles = textFiles.OrderByDescending(d => d.lastmodified).ToList();

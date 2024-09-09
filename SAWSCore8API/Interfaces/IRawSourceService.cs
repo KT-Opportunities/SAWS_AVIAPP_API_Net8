@@ -8,5 +8,6 @@ namespace SAWSCore8API.Interfaces
     {
         Task<GetRawFile> GetFile(string filePath, string imagefoldername);
         IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername);
+         IEnumerable<RawTextFile> GetTextSourceFolderFiles(string folderPath, string foldername);
     }
 }

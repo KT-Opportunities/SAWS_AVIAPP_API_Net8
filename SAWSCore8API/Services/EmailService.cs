@@ -84,7 +84,7 @@ namespace SAWSCore8API.Services
                 {
                     //smtpClient.Connect(_appSettings.host, _appSettings.Port, SecureSocketOptions.StartTls
                     smtpClient.Connect(_appSettings.host, _appSettings.Port, _appSettings.enableSsl);
-                    //smtpClient.Authenticate(_appSettings.userName, _appSettings.Password);
+                    smtpClient.Authenticate(_appSettings.userName, _appSettings.Password);
                     smtpClient.Send(mailMessage);
                     smtpClient.Disconnect(true);
                 }

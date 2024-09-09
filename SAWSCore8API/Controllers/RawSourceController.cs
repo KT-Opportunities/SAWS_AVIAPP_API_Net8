@@ -57,7 +57,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername);
+                var textFiles = _rawSourceService.GetTextSourceFolderFiles(folderPath, foldername);
 
                 return new OkObjectResult(textFiles);
             }
@@ -124,39 +124,11 @@ namespace SAWSCore8API.Controllers
             }
         }
 
-        [HttpGet("GetTextFile")]
+        [HttpGet("GetChartsFile")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetTextFile(string imagefilename, string imagefoldername = FOLDERNAME)
-        {
-
-            string folder = "text";
-            var rootFolder = _configuration["RootFolder"];
-            string filePath = Path.Combine(rootFolder, folder, imagefoldername, imagefilename);
-
-            if (!System.IO.File.Exists(filePath))
-            {
-                return new NotFoundObjectResult($"File -'{imagefilename}'- not found.");
-            }
-
-            try
-            {
-                var rawFile = await _rawSourceService.GetFile(filePath, imagefoldername);
-                return new OkObjectResult(rawFile);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unhandled exception from RawSourceController.GetTextFile");
-                return Problem("Unable to process read text folder files.");
-            }
-        }
-
-        [HttpGet("GetChartFile")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetChartFile(string imagefilename, string imagefoldername = FOLDERNAME)
+        public async Task<IActionResult> GetChartsFile(string imagefilename, string imagefoldername = FOLDERNAME)
         {
             string folder = "charts";
             var rootFolder = _configuration["RootFolder"];

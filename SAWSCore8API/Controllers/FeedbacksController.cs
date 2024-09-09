@@ -375,7 +375,7 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetFeedbackById(int id)
         {
-            var app_url = _configuration["AppURL"];
+            var app_url = _configuration["AppURLServer"];
 
             try
             {
