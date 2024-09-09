@@ -83,7 +83,48 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                       updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
                       isdeleted = false,
                       deleted_at = null
-                  }
+                },
+                new Package
+                {
+                    packageId = 7,
+                    name = "Admin monthly Regulated",
+                    price = 0.00m,
+                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    isdeleted = false,
+                    deleted_at = null
+                },
+                new Package
+                {
+                    packageId = 8,
+                    name = "Admin annually Regulated",
+                    price = 0.00m,
+                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    isdeleted = false,
+                    deleted_at = null
+                },
+                new Package
+                {
+                    packageId = 9,
+                    name = "Admin monthly Premium",
+                    price = 0.00m,
+                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    isdeleted = false,
+                    deleted_at = null
+                },
+                new Package
+                {
+                    packageId = 10,
+                    name = "Admin annually Premium",
+                    price = 0.00m,
+                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    isdeleted = false,
+                    deleted_at = null
+                }
+
             );
     }
 
@@ -95,8 +136,6 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Advert> Adverts { get; set; }
     public DbSet<DocAdvert> DocAdverts { get; set; }
     public DbSet<DocFeedback> DocFeedbacks { get; set; }
-    public DbSet<Package> Packages { get; set; }
-    public DbSet<Service> Services { get; set; }
-    public DbSet<ServiceProduct> ServiceProducts { get; set; }
+    public DbSet<Package> Package { get; set; }
     public DbSet<AdvertClick> AdvertClicks { get; set; }
 }

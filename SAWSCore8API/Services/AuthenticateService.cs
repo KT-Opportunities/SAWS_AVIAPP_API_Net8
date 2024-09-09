@@ -119,7 +119,6 @@ namespace SAWSCore8API.Services
 
             var result = await _userManager.CreateAsync(user, appUser.Password);
 
-
             if (!await _roleManager.RoleExistsAsync(userRole))
                 await _roleManager.CreateAsync(new IdentityRole(userRole));
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SAWSCore8API.DbContexts;
 
@@ -11,9 +12,11 @@ using SAWSCore8API.DbContexts;
 namespace SAWSCore8API.Migrations
 {
     [DbContext(typeof(SAWSDbContext))]
-    partial class SAWSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240909112913_RemovePackageTable")]
+    partial class RemovePackageTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -529,131 +532,6 @@ namespace SAWSCore8API.Migrations
                     b.HasIndex("feedbackId");
 
                     b.ToTable("FeedbackMessage");
-                });
-
-            modelBuilder.Entity("SAWSCore8API.Models.Package", b =>
-                {
-                    b.Property<int>("packageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("packageId"));
-
-                    b.Property<DateTime?>("created_at")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("deleted_at")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("isdeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("updated_at")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("packageId");
-
-                    b.ToTable("Package");
-
-                    b.HasData(
-                        new
-                        {
-                            packageId = 1,
-                            created_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Free",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 2,
-                            created_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "monthly Premium",
-                            price = 180.00m,
-                            updated_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 3,
-                            created_at = new DateTime(2024, 6, 13, 12, 49, 49, 577, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "monthly Regulated",
-                            price = 380.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 49, 49, 577, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 4,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "annually Premium",
-                            price = 2160.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 5,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "annually Regulated",
-                            price = 4560.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 6,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 7,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin monthly Regulated",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 8,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin annually Regulated",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 9,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin monthly Premium",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 10,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin annually Premium",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        });
                 });
 
             modelBuilder.Entity("SAWSCore8API.Models.Subscription", b =>

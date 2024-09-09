@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SAWSCore8API.DbContexts;
 
@@ -11,9 +12,11 @@ using SAWSCore8API.DbContexts;
 namespace SAWSCore8API.Migrations
 {
     [DbContext(typeof(SAWSDbContext))]
-    partial class SAWSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240909105513_RemoveTables")]
+    partial class RemoveTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -624,33 +627,6 @@ namespace SAWSCore8API.Migrations
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
                             name = "Admin monthly Regulated",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 8,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin annually Regulated",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 9,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin monthly Premium",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 10,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin annually Premium",
                             price = 0.00m,
                             updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
                         });

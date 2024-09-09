@@ -132,6 +132,36 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        [HttpGet("GetActiveSubscriptionByUserProfileId")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Subscription))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetActiveSubscriptionByUserProfileId(int id)
+        {
+            try
+            {
+                var subscription = _subscriptionService.GetActiveSubscriptionByUserProfileId(id);
+                if (subscription == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(new Response
+                {
+                    Status = "Success",
+                    Message = "Successfully returned active subscription",
+                    DetailDescription = new
+                    {
+                        Subscription = subscription
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionController.GetActiveSubscriptionByUserProfileId");
+                return Problem("Unable to get the active subscription");
+            }
+        }
+
         [HttpGet("GetSubscriptionById")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Subscription))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

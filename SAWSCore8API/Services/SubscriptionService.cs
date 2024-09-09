@@ -73,7 +73,7 @@ namespace SAWSCore8API.Services
             freeSubscription.created_at = DateTime.Now;
             freeSubscription.updated_at = DateTime.Now;
             freeSubscription.isdeleted = false;
-            
+
             _context.Subscriptions.Add(freeSubscription);
             Save();
 
@@ -300,7 +300,7 @@ namespace SAWSCore8API.Services
 
         public Subscription GetActiveSubscriptionByUserProfileId(int userId)
         {
-           return _context.Subscriptions
+            return _context.Subscriptions
                     .Where(d => d.userprofileid == userId && d.isactive)
                     .First();
         }
@@ -384,7 +384,7 @@ namespace SAWSCore8API.Services
                         return NotifyResult.SuccessResult("Successfully updated paid subscription");
                     }
                 }
-                    return NotifyResult.FailureResult("Failed to update existing subscription");
+                return NotifyResult.FailureResult("Failed to update existing subscription");
             }
             else if (!cancelActiveSubscriptionResult.Success && activeSubscriptionResult != null)
             {
@@ -405,7 +405,8 @@ namespace SAWSCore8API.Services
                     }
                 }
                 return NotifyResult.FailureResult("Failed to update existing subscription");
-            } else
+            }
+            else
             {
                 return NotifyResult.FailureResult("Failed to perform subscriptions addition to database");
             }
@@ -420,7 +421,7 @@ namespace SAWSCore8API.Services
         {
             return Task.FromResult(NotifyResult.FailureResult("Pending adding of subscription"));
         }
-       
+
         public void Save()
         {
             _context.SaveChanges();

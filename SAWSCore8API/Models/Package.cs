@@ -17,8 +17,5 @@ namespace SAWSCore8API.Models
         public DateTime? updated_at { get; set; }
         public bool? isdeleted { get; set; }
         public DateTime? deleted_at { get; set; }
-
-        public virtual List<Service> Services { get; set; } = new List<Service>();
-
     }
 }
