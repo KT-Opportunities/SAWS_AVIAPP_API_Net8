@@ -7,6 +7,6 @@ namespace SAWSCore8API.Interfaces
     public interface IRawSourceService
     {
         Task<GetRawFile> GetFile(string filePath, string imagefoldername);
-        IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername, int lasthours);
+        IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername);
     }
 }

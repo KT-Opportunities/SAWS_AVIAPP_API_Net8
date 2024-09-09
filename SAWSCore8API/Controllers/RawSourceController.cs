@@ -16,7 +16,7 @@ namespace SAWSCore8API.Controllers
         private ILogger<RawSourceController> _logger;
         private readonly IConfiguration _configuration;
 
-        private const int LASTHOURS = 48;
+        // private const int LASTHOURS = 48;
         private const string FOLDERNAME = "";
 
         #endregion
@@ -43,7 +43,7 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetSourceTextFolderFiles")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSourceTextFolderFiles(string foldername = FOLDERNAME, int lasthours = LASTHOURS)
+        public async Task<IActionResult> GetSourceTextFolderFiles(string foldername = FOLDERNAME)
         {
             string folder = @"text\";
             var rootFolder = _configuration["RootFolder"];
@@ -57,7 +57,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername, lasthours);
+                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername);
 
                 return new OkObjectResult(textFiles);
             }
@@ -71,7 +71,7 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetSourceChartFolderFilesList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSourceChartFolderFilesList(string foldername = FOLDERNAME, int lasthours = LASTHOURS)
+        public async Task<IActionResult> GetSourceChartFolderFilesList(string foldername = FOLDERNAME)
         {
             string folder = @"charts\";
             var rootFolder = @"C:\Users\manq2\Desktop\KTO\Other\AviationData";
@@ -85,7 +85,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername, lasthours);
+                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername);
 
                 return new OkObjectResult(textFiles);
             }
@@ -99,7 +99,7 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetSourceAviationFolderFilesList")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSourceAviationFolderFilesList(string foldername = FOLDERNAME, int lasthours = LASTHOURS)
+        public async Task<IActionResult> GetSourceAviationFolderFilesList(string foldername = FOLDERNAME)
         {
             string folder = @"aviation\";
             var rootFolder = _configuration["RootFolder"];
@@ -113,7 +113,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername, lasthours);
+                var textFiles = _rawSourceService.GetSourceFolderFiles(folderPath, foldername);
 
                 return new OkObjectResult(textFiles);
             }
@@ -128,7 +128,7 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetTextFile(string imagefilename, string imagefoldername = FOLDERNAME )
+        public async Task<IActionResult> GetTextFile(string imagefilename, string imagefoldername = FOLDERNAME)
         {
 
             string folder = "text";
@@ -206,9 +206,8 @@ namespace SAWSCore8API.Controllers
                 return Problem("Unable to process read aviation folder files.");
             }
         }
+        #endregion
 
-
-    #endregion
     }
 
 }

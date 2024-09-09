@@ -14,11 +14,11 @@ namespace SAWSCore8API.Services
         private readonly HttpClient _httpClient;
 
         public RawSourceService(
-            SAWSDbContext context, 
-            IUriService uriService, 
-            IHttpContextAccessor httpContextAccessor, 
-            ILogger<RawSourceService> logger, 
-            IConfiguration configuration, 
+            SAWSDbContext context,
+            IUriService uriService,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<RawSourceService> logger,
+            IConfiguration configuration,
             HttpClient httpClient
             )
         {
@@ -51,10 +51,10 @@ namespace SAWSCore8API.Services
             return GetRawFile.Result(fileInfo.Name, imagefoldername, fileModDateTime, base64String);
         }
 
-        public IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername, int lasthours)
+        public IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername)
         {
             List<RawFile> textFiles = new List<RawFile>();
-            DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
+            // DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
 
             var files = Directory.GetFiles(folderPath);
 
@@ -65,16 +65,18 @@ namespace SAWSCore8API.Services
 
                 // Filter files based on modification time
                 // NB: Add this condition if the api is slow
-                if (fileModDateTime > fileAfterThisDateTime)
+                /* if (fileModDateTime > fileAfterThisDateTime)
+                 {
+
+                 }*/
+
+                RawFile rawFile = new RawFile
                 {
-                 RawFile rawFile = new RawFile
-                    {
-                        filename = fileInfo.Name,
-                        lastmodified = fileModDateTime,
-                        foldername = foldername
+                    filename = fileInfo.Name,
+                    lastmodified = fileModDateTime,
+                    foldername = foldername
                 };
-                    textFiles.Add(rawFile);
-                }
+                textFiles.Add(rawFile);
             }
 
             textFiles = textFiles.OrderByDescending(d => d.lastmodified).ToList();
