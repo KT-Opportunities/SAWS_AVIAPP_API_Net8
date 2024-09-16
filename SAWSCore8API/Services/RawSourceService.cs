@@ -48,7 +48,7 @@ namespace SAWSCore8API.Services
                 }
             }
 
-            return GetRawFile.Result(fileInfo.Name, imagefoldername, fileModDateTime, base64String);
+            return GetRawFile.Result(imagefoldername, fileInfo.Name, fileModDateTime, base64String);
         }
 
         public IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername)
