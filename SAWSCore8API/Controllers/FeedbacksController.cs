@@ -143,14 +143,14 @@ namespace SAWSCore8API.Controllers
 
                     if (newFeedbackResult.Success)
                     {
-                     /*   return Ok(new Response
-                        {
-                            Status = "Success",
-                            Message = "Successfully added new feedback",
-                            DetailDescription = feedback
-                        });*/
+                         return Ok(new Response
+                         {
+                                Status = "Success",
+                                Message = "Successfully added new feedback",
+                                DetailDescription = feedback
+                         });
 
-                        return Ok(newFeedbackResult);
+                        // Ok(newFeedbackResult);
                     }
 
                     return BadRequest(new CreateResult

@@ -54,7 +54,7 @@ namespace SAWSCore8API.Services
         public IEnumerable<RawFile> GetSourceFolderFiles(string folderPath, string foldername)
         {
             List<RawFile> rawFiles = new List<RawFile>();
-            // DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
+            DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-12);
 
             var files = Directory.GetFiles(folderPath);
 
@@ -65,18 +65,18 @@ namespace SAWSCore8API.Services
 
                 // Filter files based on modification time
                 // NB: Add this condition if the api is slow
-                /* if (fileModDateTime > fileAfterThisDateTime)
-                 {
+                // if (fileModDateTime > fileAfterThisDateTime)
+                //  {
+                    RawFile rawFile = new RawFile
+                    {
+                        filename = fileInfo.Name,
+                        lastmodified = fileModDateTime,
+                        foldername = foldername
+                    };
+                    rawFiles.Add(rawFile);
 
-                 }*/
+                //  }
 
-                RawFile rawFile = new RawFile
-                {
-                    filename = fileInfo.Name,
-                    lastmodified = fileModDateTime,
-                    foldername = foldername
-                };
-                rawFiles.Add(rawFile);
             }
 
             rawFiles = rawFiles.OrderByDescending(d => d.lastmodified).ToList();
@@ -87,7 +87,7 @@ namespace SAWSCore8API.Services
         public IEnumerable<RawTextFile> GetTextSourceFolderFiles(string folderPath, string foldername)
         {
             List<RawTextFile> textFiles = new List<RawTextFile>();
-            // DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-lasthours);
+            DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-12);
 
             var files = Directory.GetFiles(folderPath);
 
@@ -105,21 +105,23 @@ namespace SAWSCore8API.Services
                     }
                 }
 
-                RawTextFile textFile = new RawTextFile
-                {
-                    filename = fileInfo.Name,
-                    lastmodified = fileModDateTime,
-                    foldername = foldername,
-                    filecontent = textContents
-                };
-                textFiles.Add(textFile);
+                // if (fileModDateTime > fileAfterThisDateTime)
+                // {
+                    RawTextFile textFile = new RawTextFile
+                    {
+                        filename = fileInfo.Name,
+                        lastmodified = fileModDateTime,
+                        foldername = foldername,
+                        filecontent = textContents
+                    };
+                    textFiles.Add(textFile);
+                // }
+
             }
 
             textFiles = textFiles.OrderByDescending(d => d.lastmodified).ToList();
 
             return textFiles;
         }
-
-
     }
 }
