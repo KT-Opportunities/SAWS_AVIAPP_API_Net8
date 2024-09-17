@@ -211,23 +211,41 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetAllAdverts")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult GetAllAdverts()
+        public async Task<IActionResult> GetAllAdverts()
         {
             try
             {
                 var adverts = _advertService.GetAllAdverts();
 
-                var app_url = _configuration["AppURLServer"];
+                var app_url = _configuration["AppURL"];
                 var host_location = _configuration["HostLocation"];
+                var rootPath = _configuration["rootPath"];
 
                 var toReturn = adverts.Select(ad => new AdvertDto
                 {
                     advertId = ad.advertId,
                     advert_caption = ad.advert_caption,
                     advert_url = ad.advert_url,
-                    file_url = app_url + host_location + "/" + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
+                    file_url = host_location + '/' + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
                 }).ToList();
 
+                foreach (var item in toReturn)
+                {
+                    FileInfo fileInfo = new FileInfo(item.file_url);
+                    DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                    using (FileStream fileStream = new FileStream(item.file_url, FileMode.Open, FileAccess.Read))
+                    {
+                        using (MemoryStream memoryStream = new MemoryStream())
+                        {
+                            await fileStream.CopyToAsync(memoryStream);
+                            memoryStream.Position = 0;
+                            item.file_url = Convert.ToBase64String(memoryStream.ToArray());
+                        }
+                    }
+
+
+                }
                 return new OkObjectResult(toReturn);
 
             }
