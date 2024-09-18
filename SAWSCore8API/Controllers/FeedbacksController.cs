@@ -373,9 +373,10 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetFeedbackById")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Advert))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetFeedbackById(int id)
+        public async Task<IActionResult> GetFeedbackById(int id)
         {
             var app_url = _configuration["AppURLServer"];
+            var host_location = _configuration["HostLocation"];
 
             try
             {
@@ -390,7 +391,37 @@ namespace SAWSCore8API.Controllers
                 {
                     foreach (var docFeedback in feedbackMessage.DocFeedbacks)
                     {
-                        docFeedback.file_url = app_url + $"/aviapp_api/Uploads/{docFeedback.DocTypeName}/{docFeedback.feedbackMessageId}/{docFeedback.file_origname}";
+                        docFeedback.file_url = host_location + '/' + docFeedback.DocTypeName + '/' + docFeedback.feedbackMessageId + '/' + docFeedback.file_origname;
+
+                        if (docFeedback.file_mimetype.Contains("image"))
+                        {
+                            FileInfo fileInfo = new FileInfo(docFeedback.file_url);
+                            DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                            using (FileStream fileStream = new FileStream(docFeedback.file_url, FileMode.Open, FileAccess.Read))
+                            {
+                                using (MemoryStream memoryStream = new MemoryStream())
+                                {
+                                    await fileStream.CopyToAsync(memoryStream);
+                                    memoryStream.Position = 0;
+                                    docFeedback.file_url = "data:image/png;base64," + Convert.ToBase64String(memoryStream.ToArray());
+                                }
+                            }
+                        }else
+                        {
+                            FileInfo fileInfo = new FileInfo(docFeedback.file_url);
+                            DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                            using (FileStream fileStream = new FileStream(docFeedback.file_url, FileMode.Open, FileAccess.Read))
+                            {
+                                using (MemoryStream memoryStream = new MemoryStream())
+                                {
+                                    await fileStream.CopyToAsync(memoryStream);
+                                    memoryStream.Position = 0;
+                                    docFeedback.file_url = "data:content/type;base64," + Convert.ToBase64String(memoryStream.ToArray());
+                                }
+                            }
+                        }
                     }
                 }
 
