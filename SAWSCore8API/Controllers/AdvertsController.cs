@@ -259,7 +259,7 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetAdvertByAdvertId")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Advert))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetAdvertByAdvertId(int id)
+        public async Task<IActionResult> GetAdvertByAdvertId(int id)
         {
             var app_url = _configuration["AppURLServer"];
             var host_location = _configuration["HostLocation"];
@@ -272,7 +272,20 @@ namespace SAWSCore8API.Controllers
                     return NotFound();
                 }
 
-                string fileUrl = app_url + host_location + "/"  + advert.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + advert.advertId + "/" + advert.DocAdverts.FirstOrDefault()?.file_origname;
+                string fileUrl = host_location + "/"  + advert.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + advert.advertId + "/" + advert.DocAdverts.FirstOrDefault()?.file_origname;
+
+                FileInfo fileInfo = new FileInfo(fileUrl);
+                DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                using (FileStream fileStream = new FileStream(fileUrl, FileMode.Open, FileAccess.Read))
+                {
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        await fileStream.CopyToAsync(memoryStream);
+                        memoryStream.Position = 0;
+                        fileUrl = "data:image/png;base64," + Convert.ToBase64String(memoryStream.ToArray());
+                    }
+                }
 
                 return Ok(new Response
                 {
