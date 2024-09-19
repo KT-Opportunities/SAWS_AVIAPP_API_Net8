@@ -418,7 +418,7 @@ namespace SAWSCore8API.Controllers
                                 {
                                     await fileStream.CopyToAsync(memoryStream);
                                     memoryStream.Position = 0;
-                                    docFeedback.file_url = "data:content/type;base64," + Convert.ToBase64String(memoryStream.ToArray());
+                                    docFeedback.file_url = Convert.ToBase64String(memoryStream.ToArray());
                                 }
                             }
                         }
