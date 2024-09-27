@@ -15,6 +15,8 @@ namespace SAWSCore8API.Interfaces
         Task<ResponseModel<List<Feedback>>> GetPagedAllFeedbacksByUniqueEmail([FromQuery] PaginationFilter filter);
 
         Task<ResponseModel<List<Feedback>>> GetPagedAllBroadcasts([FromQuery] PaginationFilter filter);
-  
+
+        Task<ResponseModel<List<UserProfileDto>>> GetPagedAllDeletedUsers([FromQuery] PaginationFilter filter);
+
     }
 }

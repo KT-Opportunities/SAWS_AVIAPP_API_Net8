@@ -162,5 +162,46 @@ namespace SAWSCore8API.Services
 
         }
 
+        public async Task<ResponseModel<List<UserProfileDto>>> GetPagedAllDeletedUsers([FromQuery] PaginationFilter filter)
+        {
+            var route = _httpContextAccessor.HttpContext?.Request.Path.Value;
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+
+            var pagedData = _context.userProfiles
+            .Where(d => d.isdeleted == true)
+            .Include(d => d.Subscription)
+            .OrderByDescending(d => d.userprofileid)
+            .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+            .Take(validFilter.PageSize)
+            .Select(d => new UserProfileDto
+            {
+                userprofileid = d.userprofileid,
+                fullname = d.fullname,
+                email = d.email,
+                username = d.username,
+                userrole = d.userrole,
+                aspuid = d.aspuid,
+                isactive = d.isactive,
+                created_at = d.created_at,
+                Subscription = d.Subscription
+                                .Where(s => s.isactive)
+                                .Select(s => new SubscriptionDto
+                                {
+                                    subscriptionId = s.subscriptionId,
+                                    package_name = s.package_name,
+                                    isactive = s.isactive,
+                                })
+                                .ToList()
+            })
+            .ToList();
+
+            var totalRecords = _context.userProfiles.Where(d => d.isdeleted == false).Count();
+
+            var pagedReponse = PaginationConfig.CreatePagedReponse<UserProfileDto>(pagedData, validFilter, totalRecords, _uriService, route);
+
+            return pagedReponse;
+
+        }
+
     }
 }
