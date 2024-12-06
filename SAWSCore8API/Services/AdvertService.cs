@@ -1,9 +1,6 @@
 ﻿using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
-using SAWSCore8API.Configurations;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace SAWSCore8API.Services
@@ -12,14 +9,15 @@ namespace SAWSCore8API.Services
     {
         private readonly SAWSDbContext _context;
         private readonly IUriService _uriService;
-
+        private ILogger<AdvertService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AdvertService(SAWSDbContext context, IUriService uriService, IHttpContextAccessor httpContextAccessor)
+        public AdvertService(SAWSDbContext context, IUriService uriService, IHttpContextAccessor httpContextAccessor, ILogger<AdvertService> logger)
         {
             _context = context;
             _uriService = uriService;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         public Task<CreateResult> CreateAdvert(Advert advert)
@@ -54,7 +52,7 @@ namespace SAWSCore8API.Services
             _context.Adverts.Update(advert);
             Save();
 
-            return Task.FromResult(UpdateResult.SuccessResult());
+            return Task.FromResult(UpdateResult.SuccessResultUpdate(advert.advertId));
         }
 
         public IEnumerable<Advert> GetAllAdverts()
@@ -70,17 +68,25 @@ namespace SAWSCore8API.Services
             return _context.Adverts
                     .Where(d => d.advertId == id && d.isdeleted == false)
                     .Include(d => d.DocAdverts)
-                    .FirstOrDefault();
+                    .First();
         }
 
-        public void DeleteAdvertById(int id)
+        public Task<DeleteResult> DeleteAdvertById(int id)
         {
             var advert = _context.Adverts.First(a => a.advertId == id);
 
-            advert.isdeleted = true;
-            advert.deleted_at = DateTime.Now;
+            if (advert != null)
+            {
+                advert.isdeleted = true;
+                advert.deleted_at = DateTime.Now;
 
-            Save();
+                Save();
+                return Task.FromResult(DeleteResult.SuccessResult("Successfully deleted advert"));
+            }
+            else
+            {
+                return Task.FromResult(DeleteResult.FailureResult("Failed to delete user"));
+            }
         }
 
 

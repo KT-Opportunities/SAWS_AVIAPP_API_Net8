@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
 using SAWSCore8API.Interfaces;
-using Humanizer;
 
 namespace SAWSCore8API.Controllers
 {
@@ -12,7 +10,7 @@ namespace SAWSCore8API.Controllers
     public class AdminsController : ControllerBase
     {
         #region Fields
-        private readonly ISawsService _sawsService;
+        private readonly IPagedService _pagedService;
         private readonly SAWSDbContext _context;
         private ILogger<AdminsController> _logger;
 
@@ -21,12 +19,12 @@ namespace SAWSCore8API.Controllers
         #region Constructors
         public AdminsController(
             SAWSDbContext context,
-            ISawsService sawsService,
+            IPagedService pagedService,
             ILogger<AdminsController> logger
             )
         {
             _context = context;
-            _sawsService = sawsService;
+            _pagedService = pagedService;
             _logger = logger;
         }
 
@@ -44,9 +42,11 @@ namespace SAWSCore8API.Controllers
                 return new BadRequestResult();
             }
 
+            var role = "Admin";
+
             try
             {
-                var pagedAdmins = await _sawsService.GetPagedAllAdmins(filter);
+                var pagedAdmins = await _pagedService.GetPagedAllUsers(filter, role);
                 
                 return new OkObjectResult(pagedAdmins);
 

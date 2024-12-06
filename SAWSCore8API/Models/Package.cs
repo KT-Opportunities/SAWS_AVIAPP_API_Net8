@@ -13,12 +13,9 @@ namespace SAWSCore8API.Models
 
         [Range(0.01, 9999.99)]
         public Decimal price { get; set; }
-        public DateTime created_at { get; set; }
-        public DateTime updated_at { get; set; }
+        public DateTime? created_at { get; set; }
+        public DateTime? updated_at { get; set; }
         public bool? isdeleted { get; set; }
         public DateTime? deleted_at { get; set; }
-
-        public virtual List<Service> Services { get; set; } = new List<Service>();
-
     }
 }

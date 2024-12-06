@@ -15,6 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("ConnStr") ?? throw new InvalidOperationException("Connection string 'ConnStr' not found.");
 
 builder.Services.ResolveDependencies();
+// Register HttpClient
+// builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 
 const string DefaultCorsPolicy = "DefaultCorsPolicy";
@@ -31,29 +33,14 @@ builder.Services.AddCors(options =>
         });
 });
 
-// builder.Services.AddDbContext<SAWSDbContext>(options =>
-//     options.UseSqlServer(connectionString));
-
 builder.Services.AddDbContext<SAWSDbContext>(options =>
 {
-    options.UseSqlServer(connectionString,
-    sqlServerOptionsAction: sqlOptions =>
-    {
-        sqlOptions.MigrationsAssembly(
-            typeof(Program).GetTypeInfo().Assembly.GetName().Name);
-
-        //Configuring Connection Resiliency:
-        sqlOptions.
-            EnableRetryOnFailure(maxRetryCount: 5,
-            maxRetryDelay: TimeSpan.FromSeconds(30),
-            errorNumbersToAdd: null);
-    });
+    options.UseSqlServer(connectionString);
 });
 
 // add/setup Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    // Custom password policy settings
     options.Password.RequiredLength = 4;
     options.Password.RequireDigit = false;
     options.Password.RequireNonAlphanumeric = false;
@@ -76,30 +63,17 @@ builder.Services.AddAuthentication(options =>
                 options.RequireHttpsMetadata = false;
                 options.TokenValidationParameters = new TokenValidationParameters()
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
                     // ValidateLifetime = true,
                     // ValidateIssuerSigningKey = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
                     ValidAudience = builder.Configuration["JWT:ValidAudience"],
                     ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
                 };
             });
 
-
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-
-// builder.Services.AddApiVersioning(options =>
-// {
-//     options.DefaultApiVersion = new ApiVersion(1, 0);
-//     options.AssumeDefaultVersionWhenUnspecified = true;
-//     options.ReportApiVersions = true;
-
-//     options.ApiVersionReader = new QueryStringApiVersionReader("api-version");
-//     SwaggerConfig.UseQueryStringApiVersion("api-version");
-// });
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -130,76 +104,13 @@ builder.Services.AddSwaggerGen(options =>
         Description = "An ASP.NET Core Web API for managing SAWS application version 2"
     });
 
-    // options.OperationFilter<SwaggerParameterFilters>();
-    // options.DocumentFilter<SwaggerVersionMapping>();
-
-    // options.DocInclusionPredicate((version, desc) =>
-    // {
-    //     if (!desc.TryGetMethodInfo(out MethodInfo methodInfo)) return false;
-    //     var versions = methodInfo.DeclaringType.GetCustomAttributes(true).OfType<ApiVersionAttribute>().SelectMany(attr => attr.Versions);
-    //     var maps = methodInfo.GetCustomAttributes(true).OfType<MapToApiVersionAttribute>().SelectMany(attr => attr.Versions).ToArray();
-    //     version = version.Replace("v", "");
-    //     return versions.Any(v => v.ToString() == version && maps.Any(v => v.ToString() == version));
-    // });
-
-    // var jwtSecurityScheme = new OpenApiSecurityScheme
-    // {
-    //     BearerFormat = "JWT",
-    //     Name = "JWT Authentication",
-    //     In = ParameterLocation.Header,
-    //     Type = SecuritySchemeType.Http,
-    //     Scheme = JwtBearerDefaults.AuthenticationScheme,
-    //     Description = "Put **_ONLY_** your JWT Bearer token on textbox below!",
-
-    //     Reference = new OpenApiReference
-    //     {
-    //         Id = JwtBearerDefaults.AuthenticationScheme,
-    //         Type = ReferenceType.SecurityScheme
-    //     }
-    // };
-
-    // options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    // {
-    //     Name = "Authorization",
-    //     Type = SecuritySchemeType.Http,
-    //     Scheme = "Bearer",
-    //     BearerFormat = "JWT",
-    //     In = ParameterLocation.Header,
-    //     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-    // });
-
-    // options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    // {
-    //     {
-    //         new OpenApiSecurityScheme
-    //         {
-    //             Reference = new OpenApiReference
-    //             {
-    //                 Type = ReferenceType.SecurityScheme,
-    //                 Id = "Bearer"
-    //             }
-    //         },
-    //         new string[] {}
-    //     }
-    // });
-
-    //options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
-
-    /*    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                    {
-                        { jwtSecurityScheme, Array.Empty<string>() }
-                    });*/
-
-    // using System.Reflection;
-    // var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    // options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
 });
 
 builder.Logging.AddConsole();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>
@@ -211,7 +122,7 @@ if (app.Environment.IsDevelopment())
     {
         options.InjectStylesheet("/swagger-ui/custom.css");
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Aviation API V1");
-        // options.SwaggerEndpoint("/swagger/v2/swagger.json", "Aviation API V2");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Aviation API V2");
         //options.RoutePrefix = string.Empty;
     });
 }
@@ -232,7 +143,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
@@ -240,7 +150,7 @@ app.UseStaticFiles();
 /*app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
-    RequestPath = "/documents"
+    RequestPath = "/Uploads"
 });*/
 
 app.UseCors(DefaultCorsPolicy);

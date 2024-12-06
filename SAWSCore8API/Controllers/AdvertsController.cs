@@ -14,7 +14,7 @@ namespace SAWSCore8API.Controllers
 
         #region Fields
         private readonly SAWSDbContext _context;
-        private readonly ISawsService _sawsService;
+        private readonly IPagedService _pagedService;
         private readonly IAdvertService _advertService;
         private ILogger<AdvertsController> _logger;
         public IConfiguration _configuration { get; }
@@ -25,14 +25,14 @@ namespace SAWSCore8API.Controllers
 
         public AdvertsController(
             SAWSDbContext context,
-            ISawsService sawsService,
+            IPagedService pagedService,
             IAdvertService advertService,
             ILogger<AdvertsController> logger,
             IConfiguration configuration
             )
         {
             _context = context;
-            _sawsService = sawsService;
+            _pagedService = pagedService;
             _advertService = advertService;
             _logger = logger;
             _configuration = configuration;
@@ -54,7 +54,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var pagedAdverts = await _sawsService.GetPagedAllAdverts(filter);
+                var pagedAdverts = await _pagedService.GetPagedAllAdverts(filter);
                 return new OkObjectResult(pagedAdverts);
 
             }
@@ -95,12 +95,14 @@ namespace SAWSCore8API.Controllers
 
                     if (newAdvertResult.Success)
                     {
-                        return Ok(new Response
-                        {
-                            Status = "Success",
-                            Message = "Successfully added new advert",
-                            DetailDescription = advert
-                        });
+                        // return Ok(new Response
+                        // {
+                        //     Status = "Success",
+                        //     Message = "Successfully added new advert",
+                        //     DetailDescription = advert
+                        // });
+                        
+                        return Ok(newAdvertResult);
                     }
 
                     return BadRequest(new CreateResult
@@ -124,12 +126,13 @@ namespace SAWSCore8API.Controllers
 
                     if (updateAdvertResult.Success)
                     {
-                        return Ok(new Response
-                        {
-                            Status = "Success",
-                            Message = "Successfully updated advert",
-                            DetailDescription = advert
-                        });
+                        // return Ok(new Response
+                        // {
+                        //     Status = "Success",
+                        //     Message = "Successfully updated advert",
+                        //     DetailDescription = advert
+                        // });
+                        return Ok(updateAdvertResult);
                     }
 
                     return BadRequest(new CreateResult
@@ -208,38 +211,58 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetAllAdverts")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult GetAllAdverts()
+        public async Task<IActionResult> GetAllAdverts()
         {
             try
             {
                 var adverts = _advertService.GetAllAdverts();
 
                 var app_url = _configuration["AppURL"];
+                var host_location = _configuration["HostLocation"];
+                var rootPath = _configuration["rootPath"];
 
                 var toReturn = adverts.Select(ad => new AdvertDto
                 {
                     advertId = ad.advertId,
+                    advert_caption = ad.advert_caption,
                     advert_url = ad.advert_url,
-                    file_url = app_url + "APPS/aviapp_api/Uploads/" + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
+                    file_url = host_location + '/' + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
                 }).ToList();
 
+                foreach (var item in toReturn)
+                {
+                    FileInfo fileInfo = new FileInfo(item.file_url);
+                    DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                    using (FileStream fileStream = new FileStream(item.file_url, FileMode.Open, FileAccess.Read))
+                    {
+                        using (MemoryStream memoryStream = new MemoryStream())
+                        {
+                            await fileStream.CopyToAsync(memoryStream);
+                            memoryStream.Position = 0;
+                            item.file_url = Convert.ToBase64String(memoryStream.ToArray());
+                        }
+                    }
+
+
+                }
                 return new OkObjectResult(toReturn);
 
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unable to get adverts");
-                return Problem("Unable to get adverts");
+                _logger.LogError(ex, "Unhandled exception from AdvertsController.GetAllAdverts");
+                return Problem("Unable to get the adverts");
             }
         }
-
 
         [HttpGet("GetAdvertByAdvertId")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Advert))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetAdvertByAdvertId(int id)
+        public async Task<IActionResult> GetAdvertByAdvertId(int id)
         {
-            var app_url = _configuration["AppURL"];
+            var app_url = _configuration["AppURLServer"];
+            var host_location = _configuration["HostLocation"];
 
             try
             {
@@ -249,7 +272,20 @@ namespace SAWSCore8API.Controllers
                     return NotFound();
                 }
 
-                string fileUrl = app_url + "APPS/aviapp_api/Uploads/" + advert.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + advert.advertId + "/" + advert.DocAdverts.FirstOrDefault()?.file_origname;
+                string fileUrl = host_location + "/"  + advert.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + advert.advertId + "/" + advert.DocAdverts.FirstOrDefault()?.file_origname;
+
+                FileInfo fileInfo = new FileInfo(fileUrl);
+                DateTime fileModDateTime = fileInfo.LastWriteTime;
+
+                using (FileStream fileStream = new FileStream(fileUrl, FileMode.Open, FileAccess.Read))
+                {
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        await fileStream.CopyToAsync(memoryStream);
+                        memoryStream.Position = 0;
+                        fileUrl = "data:image/png;base64," + Convert.ToBase64String(memoryStream.ToArray());
+                    }
+                }
 
                 return Ok(new Response
                 {
@@ -275,7 +311,7 @@ namespace SAWSCore8API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
         // [Authorize(Roles.Administrator)]
-        public IActionResult DeleteAdvertById(int id)
+        public async Task<IActionResult> DeleteAdvertById(int id)
         {
             try
             {
@@ -284,9 +320,17 @@ namespace SAWSCore8API.Controllers
                     return NotFound();
                 }
 
-                _advertService.DeleteAdvertById(id);
+                var result = await _advertService.DeleteAdvertById(id);
 
-                return Ok(new ResponseDto { Status = "Success", Message = "Successfully deleted advert" });
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return new BadRequestResult();
+                }
+
             }
             catch (Exception ex)
             {

@@ -29,7 +29,7 @@ namespace SAWSCore8API.Models
         /// Gets or sets the advert url.
         /// </summary>
         public string advert_url { get; set; }
-        public bool? ispublished { get; set; }
+        public bool ispublished { get; set; }
         public DateTime? created_at { get; set; }
         public DateTime? updated_at { get; set; }
         public bool? isdeleted { get; set; }

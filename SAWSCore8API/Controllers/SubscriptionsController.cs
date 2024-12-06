@@ -7,6 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SAWSCore8API.Models;
 using SAWSCore8API.DbContexts;
+using System.Net.Mime;
+using SAWSCore8API.Interfaces;
+using SAWSCore8API.Services;
+using Microsoft.AspNetCore.Authorization;
+using SAWSCore8API.Dtos;
+using PayFast.AspNetCore;
+using PayFast;
 
 namespace SAWSCore8API.Controllers
 {
@@ -17,100 +24,437 @@ namespace SAWSCore8API.Controllers
 
         #region Fields
         private readonly SAWSDbContext _context;
+        private readonly ISubscriptionService _subscriptionService;
+        private ILogger<SubscriptionsController> _logger;
 
         #endregion
 
         #region Constructors
 
-        public SubscriptionsController(SAWSDbContext context)
+        public SubscriptionsController(
+            SAWSDbContext context,
+            ISubscriptionService subscriptionService,
+            ILogger<SubscriptionsController> logger
+            )
         {
             _context = context;
+            _subscriptionService = subscriptionService;
+            _logger = logger;
         }
 
         #endregion
 
-        // GET: api/Subscriptions
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Subscription>>> GetSubscriptions()
+        #region Subscriptions
+        [HttpPost("PostInsertSubscription")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(Advert))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(UpdateResult))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PostInsertSubscription(Subscription subscription)
         {
-            return await _context.Subscriptions.ToListAsync();
-        }
-
-        // GET: api/Subscriptions/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Subscription>> GetSubscription(int id)
-        {
-            var subscription = await _context.Subscriptions.FindAsync(id);
-
-            if (subscription == null)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
             }
-
-            return subscription;
-        }
-
-        // PUT: api/Subscriptions/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSubscription(int id, Subscription subscription)
-        {
-            if (id != subscription.subscriptionId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(subscription).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                if (subscription.subscriptionId == 0)
+                {
+                    // Creating new advert
+                    var newSubscriptionResult = await _subscriptionService.CreateSubscription(subscription);
+
+                    if (newSubscriptionResult.Success)
+                    {
+                        // return Ok(new Response
+                        // {
+                        //     Status = "Success",
+                        //     Message = "Successfully added new advert",
+                        //     DetailDescription = advert
+                        // });
+
+                        return Ok(newSubscriptionResult);
+                    }
+
+                    return BadRequest(new CreateResult
+                    {
+                        Success = false,
+                        ErrorMessages = new Dictionary<string, IEnumerable<string>>
+                            {
+                                { "General", new[] { "Failed to insert subscription. Invalid condition." } }
+                            }
+                    });
+                }
+                else
+                {
+                    // Updating existing subscription
+                    if (!SubscriptionExists(subscription.subscriptionId))
+                    {
+                        return NotFound();
+                    }
+
+                    var newSubscriptionResult = await _subscriptionService.UpdateSubscription(subscription);
+
+                    if (newSubscriptionResult.Success)
+                    {
+                        // return Ok(new Response
+                        // {
+                        //     Status = "Success",
+                        //     Message = "Successfully updated advert",
+                        //     DetailDescription = advert
+                        // });
+                        return Ok(newSubscriptionResult);
+                    }
+
+                    return BadRequest(new CreateResult
+                    {
+                        Success = false,
+                        ErrorMessages = new Dictionary<string, IEnumerable<string>>
+                            {
+                                { "General", new[] { "Failed to update subscription. Invalid condition." } }
+                            }
+                    });
+                }
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionsController.PostInsertSubscription");
+                return Problem("Unable to process the subscription.");
+            }
+        }
+
+        [HttpGet("GetActiveSubscriptionByUserProfileId")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Subscription))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetActiveSubscriptionByUserProfileId(int id)
+        {
+            try
+            {
+                var subscription = _subscriptionService.GetActiveSubscriptionByUserProfileId(id);
+                if (subscription == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(new Response
+                {
+                    Status = "Success",
+                    Message = "Successfully returned active subscription",
+                    DetailDescription = new
+                    {
+                        Subscription = subscription
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionController.GetActiveSubscriptionByUserProfileId");
+                return Problem("Unable to get the active subscription");
+            }
+        }
+
+        [HttpGet("GetSubscriptionById")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Subscription))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult GetSubscriptionById(int id)
+        {
+            try
+            {
+                var subscription = _subscriptionService.GetSubscriptionById(id);
+                if (subscription == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(new Response
+                {
+                    Status = "Success",
+                    Message = "Successfully returned subscription",
+                    DetailDescription = new
+                    {
+                        Subscription = subscription
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionController.GetSubscriptionById");
+                return Problem("Unable to Get the subscription");
+            }
+        }
+
+        [HttpDelete("DeleteSubscriptionById")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(CreateResult))]
+        // [Authorize(Roles.Administrator)]
+        public async Task<IActionResult> DeleteSubscriptionById(int id)
+        {
+            try
             {
                 if (!SubscriptionExists(id))
                 {
                     return NotFound();
                 }
+
+                var result = await _subscriptionService.DeleteSubscriptionById(id);
+
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
                 else
                 {
-                    throw;
+                    return new BadRequestResult();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionController.DeleteSubscriptionById");
+                return Problem("Unable to Delete the subscription");
+            }
+        }
+
+        #endregion
+
+        #region PayFast
+        [HttpPost("RecurringPayment")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
+        public async Task<IActionResult> RecurringPayment([FromBody] Payment request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            try
+            {
+                var newRecurringPaymentResult = await _subscriptionService.RecuringPayment(request);
+
+                if (newRecurringPaymentResult.Success)
+                {
+                    return Ok(newRecurringPaymentResult);
+                }
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = new Dictionary<string, IEnumerable<string>>
+                            {
+                                { "General", new[] { "Failed to insert fayfast recurring subscription. Invalid condition." } }
+                            }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionsController.RecurringPayment");
+                return Problem("Unable to process recuring payment.");
+            }
+        }
+
+        [HttpPost("OnceOffPayment")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
+        public async Task<IActionResult> OnceOffPayment([FromBody] Payment request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            try
+            {
+                var newOnceOffPaymentResult = await _subscriptionService.OnceOffPayment(request);
+
+                if (newOnceOffPaymentResult.Success)
+                {
+                    return Ok(newOnceOffPaymentResult);
+                }
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = new Dictionary<string, IEnumerable<string>>
+                            {
+                                { "General", new[] { "Failed to insert fayfast once-off payment. Invalid condition." } }
+                            }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionsController.OnceOffPayment");
+                return Problem("Unable to process once-off payment.");
+            }
+        }
+
+        [HttpPost("AdHocPayment")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(CreateResult))]
+        public async Task<IActionResult> AdHocPayment([FromBody] Payment request)
+        {
+            if (!ModelState.IsValid)
+            {
+                var errorMessages = ModelState.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).AsEnumerable()
+                );
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = errorMessages
+                });
+            }
+
+            try
+            {
+                var newAdhocPaymentResult = await _subscriptionService.AdHocPayment(request);
+
+                if (newAdhocPaymentResult.Success)
+                {
+                    return Ok(newAdhocPaymentResult);
+                }
+
+                return BadRequest(new CreateResult
+                {
+                    Success = false,
+                    ErrorMessages = new Dictionary<string, IEnumerable<string>>
+                            {
+                                { "General", new[] { "Failed to insert fayfast adhoc payment. Invalid condition." } }
+                            }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionsController.AdHocPayment");
+                return Problem("Unable to process adhoc payment.");
+            }
+        }
+
+        [HttpPost("Notify")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Notify([ModelBinder(BinderType = typeof(PayFastNotifyModelBinder))] PayFastNotify payFastNotifyViewModel)
+        {
+            if (payFastNotifyViewModel == null)
+            {
+                return new BadRequestObjectResult("Invalid PayFast notification received.");
+            }
+
+            try
+            {
+                var newNotifyResult = await _subscriptionService.NotifyITN(payFastNotifyViewModel);
+
+                if (newNotifyResult.Success)
+                {
+                    return new OkObjectResult(newNotifyResult);
+                }
+                else
+                {
+                    return new BadRequestObjectResult(newNotifyResult);
                 }
             }
-
-            return NoContent();
-        }
-
-        // POST: api/Subscriptions
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Subscription>> PostSubscription(Subscription subscription)
-        {
-            _context.Subscriptions.Add(subscription);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetSubscription", new { id = subscription.subscriptionId }, subscription);
-        }
-
-        // DELETE: api/Subscriptions/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteSubscription(int id)
-        {
-            var subscription = await _context.Subscriptions.FindAsync(id);
-            if (subscription == null)
+            catch (Exception ex)
             {
-                return NotFound();
+                _logger.LogError(ex, "Unhandled exception from SubscriptionsController.Notify");
+                return Problem("Unable to process payment notification.");
             }
-
-            _context.Subscriptions.Remove(subscription);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
+
+        [HttpPost("NotifyTest")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> NotifyTest([ModelBinder(BinderType = typeof(PayFastNotifyModelBinder))] PayFastNotify payFastNotifyViewModel)
+        {
+            if (payFastNotifyViewModel == null)
+            {
+                return new BadRequestObjectResult("Invalid PayFast notification received.");
+            }
+            return new OkObjectResult("Notify testing");
+        }
+
+        [HttpPost("CancelSubscription")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CancelSubscription(int subscriptionId)
+        {
+            try
+            {
+                var activeSub = _subscriptionService.GetSubscriptionById(subscriptionId);
+
+                if (activeSub == null)
+                {
+                    return new NotFoundObjectResult("Subscription not found");
+                }
+
+                var activeSubscription = await _subscriptionService.CancelSubscription(activeSub.subscription_token);
+
+                activeSub.isactive = false;
+                var userId = activeSub.userprofileid;
+
+                if (activeSubscription.Success)
+                {
+                    var updateSub = await _subscriptionService.UpdateSubscription(activeSub);
+
+                    if (updateSub.Success)
+                    {                        
+                        var addFreeSub = await _subscriptionService.CreateFreeSubscription(userId);
+
+                        if (addFreeSub.Success)
+                        {
+                            return new OkObjectResult(activeSubscription);
+                        }
+                    }
+                }
+                return new BadRequestObjectResult("No active subscription to cancel");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from SubscriptionsController.CancelSubscription");
+                return Problem("Unable to process cancel payment.");
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods
 
         private bool SubscriptionExists(int id)
         {
             return _context.Subscriptions.Any(e => e.subscriptionId == id);
         }
+
+        #endregion
+
     }
 }

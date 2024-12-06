@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SAWSCore8API.Models;
-using SAWSCore8API.DbContexts;
+using SAWSCore8API.Interfaces;
 
 namespace SAWSCore8API.Controllers
 {
@@ -10,49 +9,114 @@ namespace SAWSCore8API.Controllers
     {
 
         #region Fields
-        private readonly SAWSDbContext _context;
+        private readonly ILookupService _lookupService;
+        private ILogger<LookupController> _logger;
+        public IConfiguration _configuration { get; }
 
         #endregion
 
         #region Constructors
 
-        public LookupController(SAWSDbContext context)
+        public LookupController(
+                    ILookupService lookupService,
+        ILogger<LookupController> logger,
+        IConfiguration configuration
+            )
         {
-            _context = context;
+            _lookupService = lookupService;
+            _logger = logger;
+            _configuration = configuration;
         }
 
         #endregion
 
-        // GET: api/<LookupController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        #region Lookup
+
+        [HttpGet("GetRegistrationsPerUserType")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetRegistrationsPerUserType()
         {
-            return new string[] { "value1", "value2" };
+            var startDate = DateTime.Now.AddMonths(-12);
+            var monthNames = new[]
+            {
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
+            };
+
+            try
+            {
+                var records = _lookupService.GetRegistrationsPerUserType();
+
+                var result = records
+                        .GroupBy(r => new { r.year, r.month })
+                        .Select(g => new
+                        {
+                            MonthString = monthNames[g.Key.month - 1],
+                            Month = g.Key.month,
+                            Year = g.Key.year,
+                            UserTypes = g.Select(r => new
+                            {
+                                r.userRole,
+                                r.subscriptionType,
+                                r.registrations
+                            }).ToList()
+                        })
+                        .OrderBy(g => g.Year)
+                        .ThenBy(g => g.Month)
+                        .ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from LookupController.GetRegistrationsPerUserType");
+                return Problem("Unable to process GetRegistrationsPerUserType.");
+            }
         }
 
-        // GET api/<LookupController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("GetSubscriptionsPerPackageType")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetSubscriptionsPerPackageType()
         {
-            return "value";
+            try
+            {
+                var userSubscriptionsCounts = _lookupService.GetSubscriptionsPerPackageType();
+
+                var newUserSubscriptionsCounts = userSubscriptionsCounts.Where(g => !(g.userRole == "Subscriber" && g.subscriptionType == null));
+                var totalCount = newUserSubscriptionsCounts.Sum(usc => usc.subscriptions);
+
+                var response = new
+                {
+                    userSubscriptionCounts = newUserSubscriptionsCounts,
+                    totalCount = totalCount
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from LookupController.GetSubscriptionsPerPackageType");
+                return Problem("Unable to process GetSubscriptionsPerPackageType.");
+            }
         }
 
-        // POST api/<LookupController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpGet("GetAdvertsClickPerMonth")]
+        [MapToApiVersion("1")]
+        public IActionResult GetAdvertsClickPerMonth()
         {
+            try
+            {
+                var result = _lookupService.GetAdvertsClickPerMonth();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception from LookupController.GetAdvertsClickPerMonth");
+                return Problem("Unable to process GetAdvertsClickPerMonth.");
+            }
         }
 
-        // PUT api/<LookupController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE api/<LookupController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
+        #endregion
     }
 }

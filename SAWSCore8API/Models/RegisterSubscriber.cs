@@ -19,6 +19,5 @@ namespace SAWSCore8API.Models
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
 
-        public string UserRole { get; set; }
     }
 }
