@@ -12,14 +12,5 @@ namespace SAWSCore8API.Models
                 NewId = id,
             };
         }
-
-        public static CreateResult FailureResult(string errorMessage)
-        {
-            return new CreateResult
-            {
-                Success = false,
-                ErrorMessages = CreateError(errorMessage)
-            };
-        }
     }
 }

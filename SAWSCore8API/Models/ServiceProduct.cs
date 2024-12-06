@@ -3,22 +3,18 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SAWSCore8API.Models
 {
-    [Table("Package")]
-    public class Package
+    [Table("ServiceProduct")]
+    public class ServiceProduct
     {
         [Key]
-        public int packageId { get; set; }
+        public int serviceProductId { get; set; }
         [Required]
         public string name { get; set; }
-
-        [Range(0.01, 9999.99)]
-        public Decimal price { get; set; }
+        [Required]
+        public int serviceId { get; set; }
         public DateTime created_at { get; set; }
         public DateTime updated_at { get; set; }
         public bool? isdeleted { get; set; }
         public DateTime? deleted_at { get; set; }
-
-        public virtual List<Service> Services { get; set; } = new List<Service>();
-
     }
 }

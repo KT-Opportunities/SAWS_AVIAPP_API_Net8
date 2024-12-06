@@ -9,8 +9,9 @@ namespace SAWSCore8API.Controllers
     [ApiController]
     public class SubscribersController : ControllerBase
     {
+
         #region Fields
-        private readonly IPagedService _pagedService;
+        private readonly ISawsService _sawsService;
         private readonly SAWSDbContext _context;
         private ILogger<SubscribersController> _logger;
 
@@ -19,12 +20,12 @@ namespace SAWSCore8API.Controllers
         #region Constructors
         public SubscribersController(
             SAWSDbContext context,
-            IPagedService pagedService,
+            ISawsService sawsService,
             ILogger<SubscribersController> logger
         )
         {
             _context = context;
-            _pagedService = pagedService;
+            _sawsService = sawsService;
             _logger = logger;
         }
 
@@ -42,11 +43,9 @@ namespace SAWSCore8API.Controllers
                 return new BadRequestResult();
             }
 
-            var role = "Subscriber";
-
             try
             {
-                var pagedSubscribers = await _pagedService.GetPagedAllUsers(filter, role);
+                var pagedSubscribers = await _sawsService.GetPagedAllSubscribers(filter);
                 return new OkObjectResult(pagedSubscribers);
 
             }
@@ -58,5 +57,42 @@ namespace SAWSCore8API.Controllers
         }
 
         #endregion
+
+        #region PayFast
+
+        #endregion
+
+
+        // GET: api/<SubscribersController>
+        [HttpGet]
+        public IEnumerable<string> Get()
+        {
+            return new string[] { "value1", "value2" };
+        }
+
+        // GET api/<SubscribersController>/5
+        [HttpGet("{id}")]
+        public string Get(int id)
+        {
+            return "value";
+        }
+
+        // POST api/<SubscribersController>
+        [HttpPost]
+        public void Post([FromBody] string value)
+        {
+        }
+
+        // PUT api/<SubscribersController>/5
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody] string value)
+        {
+        }
+
+        // DELETE api/<SubscribersController>/5
+        [HttpDelete("{id}")]
+        public void Delete(int id)
+        {
+        }
     }
 }

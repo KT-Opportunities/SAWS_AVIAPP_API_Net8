@@ -10,7 +10,7 @@ namespace SAWSCore8API.Interfaces
         Task<CreateResult> AddAdvertClick(AdvertClick click);
         IEnumerable<Advert> GetAllAdverts();
         Advert GetAdvertByAdvertId(int id);
-        Task<DeleteResult> DeleteAdvertById(int id);
+        void DeleteAdvertById(int id);
         void Save();
     }
 }

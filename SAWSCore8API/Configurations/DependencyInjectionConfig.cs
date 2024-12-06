@@ -7,17 +7,13 @@ namespace SAWSCore8API.Configurations
     {
         public static IServiceCollection ResolveDependencies(this IServiceCollection services)
         {
-            // Register HttpClient
-            services.AddHttpClient();
+            // services.AddScoped<IProductRepository, ProductRepository>();
+            // services.AddScoped<IOrderRepository, OrderRepository>();
+
+            // services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IAdvertService, AdvertService>();
-            services.AddScoped<ILookupService, LookupService>();
-            services.AddScoped<IAuthenticateService, AuthenticateService>();
-            services.AddScoped<IFileManagerService, FileManagerService>();
-            services.AddScoped<ISubscriptionService, SubscriptionService>();
-            services.AddScoped<IFeedbackService, FeedbackService>();
-            services.AddScoped<IRawSourceService, RawSourceService>();
-            services.AddScoped<IPagedService, PagedService>();
-            services.AddTransient<IEmailService, EmailService>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<ISawsService, SawsService>();
 
             services.AddSingleton<IUriService>(o =>
             {
