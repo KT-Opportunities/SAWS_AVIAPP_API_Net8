@@ -180,7 +180,7 @@ namespace SAWSCore8API.Migrations
                     b.Property<bool?>("isdeleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("ispublished")
+                    b.Property<bool?>("ispublished")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("updated_at")
@@ -231,6 +231,14 @@ namespace SAWSCore8API.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -243,6 +251,7 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
@@ -252,6 +261,7 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
@@ -277,7 +287,15 @@ namespace SAWSCore8API.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("PhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -322,21 +340,26 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("file_extention")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_mimetype")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_origname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_seqname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long?>("file_size")
                         .HasColumnType("bigint");
 
                     b.Property<string>("file_url")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("isdeleted")
@@ -374,21 +397,26 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("file_extention")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_mimetype")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_origname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("file_seqname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long?>("file_size")
                         .HasColumnType("bigint");
 
                     b.Property<string>("file_url")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("isdeleted")
@@ -413,15 +441,18 @@ namespace SAWSCore8API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("feedbackId"));
 
                     b.Property<string>("batchId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("broadcasterEmail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("broadcasterId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("deleted_at")
@@ -438,9 +469,11 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("responderEmail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("senderEmail")
@@ -455,7 +488,7 @@ namespace SAWSCore8API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("updated_at")
+                    b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("feedbackId");
@@ -472,9 +505,11 @@ namespace SAWSCore8API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("feedbackMessageId"));
 
                     b.Property<string>("broadcast")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("broadcastId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("created_at")
@@ -484,12 +519,15 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("feedback")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("feedbackAttachment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("feedbackAttachmentFileName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("feedbackId")
@@ -499,18 +537,23 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("responderEmail")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responderId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("response")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responseAttachment")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("responseAttachmentFileName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("senderEmail")
@@ -539,7 +582,7 @@ namespace SAWSCore8API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("packageId"));
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("deleted_at")
@@ -556,7 +599,7 @@ namespace SAWSCore8API.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("updated_at")
+                    b.Property<DateTime>("updated_at")
                         .HasColumnType("datetime2");
 
                     b.HasKey("packageId");
@@ -569,7 +612,7 @@ namespace SAWSCore8API.Migrations
                             packageId = 1,
                             created_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified),
                             isdeleted = false,
-                            name = "Free",
+                            name = "monthly Free",
                             price = 0.00m,
                             updated_at = new DateTime(2024, 2, 23, 12, 0, 0, 0, DateTimeKind.Unspecified)
                         },
@@ -596,8 +639,8 @@ namespace SAWSCore8API.Migrations
                             packageId = 4,
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
-                            name = "annually Premium",
-                            price = 2160.00m,
+                            name = "annually Free",
+                            price = 0.00m,
                             updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
                         },
                         new
@@ -605,8 +648,8 @@ namespace SAWSCore8API.Migrations
                             packageId = 5,
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
-                            name = "annually Regulated",
-                            price = 4560.00m,
+                            name = "annually Premium",
+                            price = 2160.00m,
                             updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
                         },
                         new
@@ -614,46 +657,78 @@ namespace SAWSCore8API.Migrations
                             packageId = 6,
                             created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
                             isdeleted = false,
-                            name = "Admin",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 7,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin monthly Regulated",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 8,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin annually Regulated",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 9,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin monthly Premium",
-                            price = 0.00m,
-                            updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            packageId = 10,
-                            created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified),
-                            isdeleted = false,
-                            name = "Admin annually Premium",
-                            price = 0.00m,
+                            name = "annually Regulated",
+                            price = 4560.00m,
                             updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177, DateTimeKind.Unspecified)
                         });
+                });
+
+            modelBuilder.Entity("SAWSCore8API.Models.Service", b =>
+                {
+                    b.Property<int>("serviceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("serviceId"));
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("deleted_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("isdeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("packageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("serviceId");
+
+                    b.HasIndex("packageId");
+
+                    b.ToTable("Service");
+                });
+
+            modelBuilder.Entity("SAWSCore8API.Models.ServiceProduct", b =>
+                {
+                    b.Property<int>("serviceProductId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("serviceProductId"));
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("deleted_at")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("isdeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("serviceId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("updated_at")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("serviceProductId");
+
+                    b.HasIndex("serviceId");
+
+                    b.ToTable("ServiceProduct");
                 });
 
             modelBuilder.Entity("SAWSCore8API.Models.Subscription", b =>
@@ -673,9 +748,6 @@ namespace SAWSCore8API.Migrations
                     b.Property<DateTime>("end_date")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("isactive")
-                        .HasColumnType("bit");
-
                     b.Property<bool?>("isdeleted")
                         .HasColumnType("bit");
 
@@ -693,10 +765,15 @@ namespace SAWSCore8API.Migrations
                     b.Property<DateTime>("start_date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("subscription_duration")
+                    b.Property<int>("subscription_duration")
                         .HasColumnType("int");
 
+                    b.Property<string>("subscription_status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("subscription_token")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("updated_at")
@@ -735,19 +812,18 @@ namespace SAWSCore8API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("fullname")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool?>("isactive")
-                        .HasColumnType("bit");
 
                     b.Property<bool?>("isdeleted")
                         .HasColumnType("bit");
 
+                    b.Property<string>("mobilenumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("updated_at")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("username")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("userrole")
                         .IsRequired()
@@ -836,6 +912,24 @@ namespace SAWSCore8API.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SAWSCore8API.Models.Service", b =>
+                {
+                    b.HasOne("SAWSCore8API.Models.Package", null)
+                        .WithMany("Services")
+                        .HasForeignKey("packageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SAWSCore8API.Models.ServiceProduct", b =>
+                {
+                    b.HasOne("SAWSCore8API.Models.Service", null)
+                        .WithMany("Products")
+                        .HasForeignKey("serviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SAWSCore8API.Models.Subscription", b =>
                 {
                     b.HasOne("SAWSCore8API.Models.UserProfile", null)
@@ -858,6 +952,16 @@ namespace SAWSCore8API.Migrations
             modelBuilder.Entity("SAWSCore8API.Models.FeedbackMessage", b =>
                 {
                     b.Navigation("DocFeedbacks");
+                });
+
+            modelBuilder.Entity("SAWSCore8API.Models.Package", b =>
+                {
+                    b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("SAWSCore8API.Models.Service", b =>
+                {
+                    b.Navigation("Products");
                 });
 
             modelBuilder.Entity("SAWSCore8API.Models.UserProfile", b =>

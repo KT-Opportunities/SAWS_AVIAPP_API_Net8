@@ -27,7 +27,7 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 new Package
                 {
                     packageId = 1,
-                    name = "Free",
+                    name = "monthly Free",
                     price = 0.00m,
                     created_at = new DateTime(2024, 2, 23, 12, 0, 0),
                     updated_at = new DateTime(2024, 2, 23, 12, 0, 0),
@@ -57,6 +57,16 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 new Package
                 {
                     packageId = 4,
+                    name = "annually Free",
+                    price = 0.00m,
+                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
+                    isdeleted = false,
+                    deleted_at = null
+                },
+                new Package
+                {
+                    packageId = 5,
                     name = "annually Premium",
                     price = 2160.00m,
                     created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
@@ -66,67 +76,18 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
                 },
                 new Package
                 {
-                    packageId = 5,
+                    packageId = 6,
                     name = "annually Regulated",
                     price = 4560.00m,
                     created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
                     updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
                     isdeleted = false,
                     deleted_at = null
-                },
-                new Package
-                  {
-                      packageId = 6,
-                      name = "Admin",
-                      price = 0.00m,
-                      created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                      updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                      isdeleted = false,
-                      deleted_at = null
-                },
-                new Package
-                {
-                    packageId = 7,
-                    name = "Admin monthly Regulated",
-                    price = 0.00m,
-                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    isdeleted = false,
-                    deleted_at = null
-                },
-                new Package
-                {
-                    packageId = 8,
-                    name = "Admin annually Regulated",
-                    price = 0.00m,
-                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    isdeleted = false,
-                    deleted_at = null
-                },
-                new Package
-                {
-                    packageId = 9,
-                    name = "Admin monthly Premium",
-                    price = 0.00m,
-                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    isdeleted = false,
-                    deleted_at = null
-                },
-                new Package
-                {
-                    packageId = 10,
-                    name = "Admin annually Premium",
-                    price = 0.00m,
-                    created_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    updated_at = new DateTime(2024, 6, 13, 12, 56, 53, 177),
-                    isdeleted = false,
-                    deleted_at = null
                 }
-
             );
     }
+
+    /*public DbSet<TodoItem> TodoItems { get; set; } = null!;*/
 
     public DbSet<ApplicationUser> User { get; set; }
     public DbSet<UserProfile> userProfiles { get; set; }
@@ -136,6 +97,8 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Advert> Adverts { get; set; }
     public DbSet<DocAdvert> DocAdverts { get; set; }
     public DbSet<DocFeedback> DocFeedbacks { get; set; }
-    public DbSet<Package> Package { get; set; }
+    public DbSet<Package> Packages { get; set; }
+    public DbSet<Service> Services { get; set; }
+    public DbSet<ServiceProduct> ServiceProducts { get; set; }
     public DbSet<AdvertClick> AdvertClicks { get; set; }
 }
