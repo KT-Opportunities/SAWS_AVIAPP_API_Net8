@@ -74,7 +74,7 @@ namespace SAWSCore8API.Controllers
         public async Task<IActionResult> GetSourceChartFolderFilesList(string foldername = FOLDERNAME)
         {
             string folder = @"charts\";
-            var rootFolder = @"C:\Users\manq2\Desktop\KTO\Other\AviationData";
+            var rootFolder = _configuration["RootFolder"];
 
             string folderPath = Path.Combine(rootFolder, folder, foldername);
 
