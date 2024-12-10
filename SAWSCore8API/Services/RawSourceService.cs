@@ -105,8 +105,10 @@ namespace SAWSCore8API.Services
                     }
                 }
 
-                // if (fileModDateTime > fileAfterThisDateTime)
-                // {
+                // Filter files based on modification time
+                // NB: Add this condition if the api is slow
+                if (fileModDateTime > fileAfterThisDateTime)
+                {
                     RawTextFile textFile = new RawTextFile
                     {
                         filename = fileInfo.Name,
@@ -115,7 +117,7 @@ namespace SAWSCore8API.Services
                         filecontent = textContents
                     };
                     textFiles.Add(textFile);
-                // }
+                }
 
             }
 
