@@ -18,6 +18,7 @@ namespace SAWSCore8API.Controllers
 
         // private const int LASTHOURS = 48;
         private const string FOLDERNAME = "";
+        private const int LIMIT = 300;
 
         #endregion
 
@@ -43,7 +44,7 @@ namespace SAWSCore8API.Controllers
         [HttpGet("GetSourceTextFolderFiles")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSourceTextFolderFiles(string foldername = FOLDERNAME)
+        public async Task<IActionResult> GetSourceTextFolderFiles(string foldername = FOLDERNAME, int limit = LIMIT)
         {
             string folder = @"text\";
             var rootFolder = _configuration["RootFolder"];
@@ -57,7 +58,7 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                var textFiles = _rawSourceService.GetTextSourceFolderFiles(folderPath, foldername);
+                var textFiles = _rawSourceService.GetTextSourceFolderFiles(folderPath, foldername, limit);
 
                 return new OkObjectResult(textFiles);
             }
