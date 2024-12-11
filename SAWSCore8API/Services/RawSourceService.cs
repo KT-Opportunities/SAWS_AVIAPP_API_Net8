@@ -84,14 +84,14 @@ namespace SAWSCore8API.Services
             return rawFiles;
         }
 
-        public IEnumerable<RawTextFile> GetTextSourceFolderFiles(string folderPath, string foldername)
+        public IEnumerable<RawTextFile> GetTextSourceFolderFiles(string folderPath, string foldername, int limit)
         {
             List<RawTextFile> textFiles = new List<RawTextFile>();
             DateTime fileAfterThisDateTime = DateTime.Now.AddHours(-12);
 
             var files = Directory.GetFiles(folderPath);
 
-            foreach (string filePath in files)
+            foreach (string filePath in files.Take(limit))
             {
                 FileInfo fileInfo = new FileInfo(filePath);
                 DateTime fileModDateTime = fileInfo.LastWriteTime;
@@ -107,8 +107,8 @@ namespace SAWSCore8API.Services
 
                 // Filter files based on modification time
                 // NB: Add this condition if the api is slow
-                if (fileModDateTime > fileAfterThisDateTime)
-                {
+                //if (fileModDateTime > fileAfterThisDateTime)
+                //{
                     RawTextFile textFile = new RawTextFile
                     {
                         filename = fileInfo.Name,
@@ -117,8 +117,7 @@ namespace SAWSCore8API.Services
                         filecontent = textContents
                     };
                     textFiles.Add(textFile);
-                }
-
+                //}
             }
 
             textFiles = textFiles.OrderByDescending(d => d.lastmodified).ToList();
