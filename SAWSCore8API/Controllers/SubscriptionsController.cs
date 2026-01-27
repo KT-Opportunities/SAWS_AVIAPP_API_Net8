@@ -17,20 +17,33 @@ using PayFast;
 
 namespace SAWSCore8API.Controllers
 {
+    /// <summary>
+    /// Exposes subscription management and PayFast payment endpoints (create, update, cancel, query, and payment notifications).
+    /// </summary>
+    /// <remarks>Base route: <c>api/v1/Subscriptions</c>.</remarks>
     [Route("api/v1/[controller]")]
     [ApiController]
     public class SubscriptionsController : ControllerBase
     {
 
         #region Fields
+
         private readonly SAWSDbContext _context;
+
         private readonly ISubscriptionService _subscriptionService;
+
         private ILogger<SubscriptionsController> _logger;
 
         #endregion
 
         #region Constructors
 
+        /// <summary>
+        /// Creates a new <see cref="SubscriptionsController"/> instance.
+        /// </summary>
+        /// <param name="context">EF Core database context.</param>
+        /// <param name="subscriptionService">Subscription service.</param>
+        /// <param name="logger">Logger.</param>
         public SubscriptionsController(
             SAWSDbContext context,
             ISubscriptionService subscriptionService,
@@ -45,6 +58,14 @@ namespace SAWSCore8API.Controllers
         #endregion
 
         #region Subscriptions
+        /// <summary>
+        /// Creates a new subscription or updates an existing one based on the presence of <c>subscription.subscriptionId</c>.
+        /// </summary>
+        /// <param name="subscription">Subscription payload.</param>
+        /// <returns>Result indicating success or failure with validation errors if any.</returns>
+        /// <response code="200">Insert/update succeeded.</response>
+        /// <response code="400">Validation or business rule failure.</response>
+        /// <response code="404">Subscription to update not found.</response>
         [HttpPost("PostInsertSubscription")]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(Advert))]
@@ -68,20 +89,13 @@ namespace SAWSCore8API.Controllers
 
             try
             {
-                if (subscription.subscriptionId == 0)
+                if (subscription.subscriptionId ==0)
                 {
-                    // Creating new advert
+                    // Creating new subscription
                     var newSubscriptionResult = await _subscriptionService.CreateSubscription(subscription);
 
                     if (newSubscriptionResult.Success)
                     {
-                        // return Ok(new Response
-                        // {
-                        //     Status = "Success",
-                        //     Message = "Successfully added new advert",
-                        //     DetailDescription = advert
-                        // });
-
                         return Ok(newSubscriptionResult);
                     }
 
@@ -106,12 +120,6 @@ namespace SAWSCore8API.Controllers
 
                     if (newSubscriptionResult.Success)
                     {
-                        // return Ok(new Response
-                        // {
-                        //     Status = "Success",
-                        //     Message = "Successfully updated advert",
-                        //     DetailDescription = advert
-                        // });
                         return Ok(newSubscriptionResult);
                     }
 
@@ -132,6 +140,13 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets the currently active subscription for a user profile.
+        /// </summary>
+        /// <param name="id">User profile identifier.</param>
+        /// <returns>Wrapper response containing the active subscription if found.</returns>
+        /// <response code="200">Active subscription found.</response>
+        /// <response code="404">No active subscription for user.</response>
         [HttpGet("GetActiveSubscriptionByUserProfileId")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Subscription))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -162,6 +177,13 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets a subscription by its identifier.
+        /// </summary>
+        /// <param name="id">Subscription identifier.</param>
+        /// <returns>Subscription wrapped in a response object.</returns>
+        /// <response code="200">Subscription found.</response>
+        /// <response code="404">Subscription not found.</response>
         [HttpGet("GetSubscriptionById")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Subscription))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -192,6 +214,14 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes a subscription by its identifier.
+        /// </summary>
+        /// <param name="id">Subscription identifier.</param>
+        /// <returns>Deletion operation result.</returns>
+        /// <response code="200">Subscription deleted.</response>
+        /// <response code="404">Subscription not found.</response>
+        /// <response code="400">Deletion failed.</response>
         [HttpDelete("DeleteSubscriptionById")]
         [Consumes(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -229,6 +259,13 @@ namespace SAWSCore8API.Controllers
         #endregion
 
         #region PayFast
+        /// <summary>
+        /// Initiates a recurring PayFast payment and returns redirect/processing URL.
+        /// </summary>
+        /// <param name="request">Payment request details.</param>
+        /// <returns>Result with redirect URL or validation errors.</returns>
+        /// <response code="200">Recurring payment initiated.</response>
+        /// <response code="400">Validation or initiation failed.</response>
         [HttpPost("RecurringPayment")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
@@ -273,6 +310,13 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Initiates a once-off PayFast payment.
+        /// </summary>
+        /// <param name="request">Payment request details.</param>
+        /// <returns>Result with redirect URL or validation errors.</returns>
+        /// <response code="200">Payment initiated.</response>
+        /// <response code="400">Validation or initiation failed.</response>
         [HttpPost("OnceOffPayment")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(DeleteResult))]
@@ -317,6 +361,13 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Initiates an ad-hoc PayFast payment.
+        /// </summary>
+        /// <param name="request">Payment request details.</param>
+        /// <returns>Result indicating success or failure.</returns>
+        /// <response code="200">Payment initiated.</response>
+        /// <response code="400">Validation or initiation failed.</response>
         [HttpPost("AdHocPayment")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(CreateResult))]
@@ -361,6 +412,13 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Handles PayFast Instant Transaction Notification (ITN).
+        /// </summary>
+        /// <param name="payFastNotifyViewModel">Notification model bound by <see cref="PayFastNotifyModelBinder"/>.</param>
+        /// <returns>Result indicating success or failure of notification processing.</returns>
+        /// <response code="200">Notification processed.</response>
+        /// <response code="400">Invalid notification payload.</response>
         [HttpPost("Notify")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -391,6 +449,13 @@ namespace SAWSCore8API.Controllers
             }
         }
 
+        /// <summary>
+        /// Test endpoint for PayFast notification binding.
+        /// </summary>
+        /// <param name="payFastNotifyViewModel">Notification model.</param>
+        /// <returns>Simple acknowledgement for test purposes.</returns>
+        /// <response code="200">Binding test successful.</response>
+        /// <response code="400">Invalid payload.</response>
         [HttpPost("NotifyTest")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -403,6 +468,14 @@ namespace SAWSCore8API.Controllers
             return new OkObjectResult("Notify testing");
         }
 
+        /// <summary>
+        /// Cancels an existing active subscription and provisions a free fallback subscription.
+        /// </summary>
+        /// <param name="subscriptionId">Identifier of the subscription to cancel.</param>
+        /// <returns>Result of cancellation sequence.</returns>
+        /// <response code="200">Cancellation succeeded.</response>
+        /// <response code="404">Subscription not found.</response>
+        /// <response code="400">Cancellation failed.</response>
         [HttpPost("CancelSubscription")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -427,7 +500,7 @@ namespace SAWSCore8API.Controllers
                     var updateSub = await _subscriptionService.UpdateSubscription(activeSub);
 
                     if (updateSub.Success)
-                    {                        
+                    { 
                         var addFreeSub = await _subscriptionService.CreateFreeSubscription(userId);
 
                         if (addFreeSub.Success)
@@ -449,6 +522,11 @@ namespace SAWSCore8API.Controllers
 
         #region Helper Methods
 
+        /// <summary>
+        /// Checks if a subscription exists by identifier.
+        /// </summary>
+        /// <param name="id">Subscription identifier.</param>
+        /// <returns>True if exists; otherwise false.</returns>
         private bool SubscriptionExists(int id)
         {
             return _context.Subscriptions.Any(e => e.subscriptionId == id);
