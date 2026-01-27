@@ -13,9 +13,15 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
 using System.Web;
+using SAWSCore8API.Options;
 
 namespace SAWSCore8API.Services
 {
+    /// <summary>
+    /// Implements subscription management and PayFast payment operations.
+    /// Handles creating/updating/deleting subscriptions, initiating payments,
+    /// processing PayFast ITN notifications, and cancelling active subscriptions.
+    /// </summary>
     public class SubscriptionService : ISubscriptionService
     {
         private readonly SAWSDbContext _context;
@@ -25,8 +31,20 @@ namespace SAWSCore8API.Services
         private readonly IConfiguration _configuration;
         private readonly PayFastSettings payFastSettings;
         private readonly HttpClient _httpClient;
+        private readonly PayFastOptions _payFastOptions;
 
-        public SubscriptionService(SAWSDbContext context, IUriService uriService, IHttpContextAccessor httpContextAccessor, ILogger<SubscriptionService> logger, IConfiguration configuration, IOptions<PayFastSettings> payFastSettings, HttpClient httpClient)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SubscriptionService"/> class.
+        /// </summary>
+        /// <param name="context">EF Core database context.</param>
+        /// <param name="uriService">URI helper service for pagination or link building.</param>
+        /// <param name="httpContextAccessor">HTTP context accessor.</param>
+        /// <param name="logger">Logger instance.</param>
+        /// <param name="configuration">Application configuration provider.</param>
+        /// <param name="payFastSettings">PayFast configuration options.</param>
+        /// <param name="httpClient">HTTP client used for external calls.</param>
+        /// <param name="payFastOptions">PayFast options (public base URL).</param>
+        public SubscriptionService(SAWSDbContext context, IUriService uriService, IHttpContextAccessor httpContextAccessor, ILogger<SubscriptionService> logger, IConfiguration configuration, IOptions<PayFastSettings> payFastSettings, HttpClient httpClient, IOptions<PayFastOptions> payFastOptions)
         {
             _context = context;
             _uriService = uriService;
@@ -35,8 +53,53 @@ namespace SAWSCore8API.Services
             _configuration = configuration;
             this.payFastSettings = payFastSettings.Value;
             _httpClient = httpClient ?? new HttpClient();
+            _payFastOptions = payFastOptions.Value;
         }
 
+        private bool TryGetPublicBaseUri(out Uri publicBaseUri, out string error)
+        {
+            publicBaseUri = default!;
+            error = string.Empty;
+
+            var raw = _payFastOptions.PublicBaseUrl;
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                error = "PayFast PublicBaseUrl is not configured. Please set PayFast:PublicBaseUrl to a publicly reachable https:// URL.";
+                return false;
+            }
+
+            if (!Uri.TryCreate(raw, UriKind.Absolute, out publicBaseUri))
+            {
+                error = "PayFast PublicBaseUrl is invalid. Please set PayFast:PublicBaseUrl to a valid absolute https:// URL.";
+                return false;
+            }
+
+            if (!string.Equals(publicBaseUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                error = "PayFast PublicBaseUrl must use https:// (PayFast rejects non-HTTPS return/cancel URLs).";
+                return false;
+            }
+
+            return true;
+        }
+
+        private Uri BuildPublicUrl(Uri publicBaseUri, string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+            {
+                return publicBaseUri;
+            }
+
+            var baseString = publicBaseUri.ToString().TrimEnd('/');
+            var relString = relativePath.StartsWith('/') ? relativePath : "/" + relativePath;
+            return new Uri(baseString + relString, UriKind.Absolute);
+        }
+
+        /// <summary>
+        /// Creates a new subscription record.
+        /// </summary>
+        /// <param name="subscription">Subscription to create.</param>
+        /// <returns>A result containing the new identifier on success.</returns>
         public Task<CreateResult> CreateSubscription(Subscription subscription)
         {
             subscription.created_at = DateTime.Now;
@@ -49,6 +112,11 @@ namespace SAWSCore8API.Services
             return Task.FromResult(CreateResult.SuccessResult(subscription.subscriptionId));
         }
 
+        /// <summary>
+        /// Creates a free subscription for the specified user.
+        /// </summary>
+        /// <param name="userId">User identifier.</param>
+        /// <returns>Create result with the new subscription identifier.</returns>
         public Task<CreateResult> CreateFreeSubscription(int userId)
         {
 
@@ -63,11 +131,11 @@ namespace SAWSCore8API.Services
 
             freeSubscription.userprofileid = userId;
             freeSubscription.package_name = user.userrole == "Admin" ? "Admin" : "monthly Free";
-            freeSubscription.package_id = 1;
-            freeSubscription.package_price = 0;
+            freeSubscription.package_id =1;
+            freeSubscription.package_price =0;
             freeSubscription.start_date = DateTime.Now;
             freeSubscription.end_date = DateTime.Now.AddYears(1);
-            freeSubscription.subscription_duration = 365;
+            freeSubscription.subscription_duration =365;
             freeSubscription.subscription_token = "";
             freeSubscription.isactive = true;
             freeSubscription.created_at = DateTime.Now;
@@ -80,18 +148,33 @@ namespace SAWSCore8API.Services
             return Task.FromResult(CreateResult.SuccessResult(freeSubscription.subscriptionId));
         }
 
+        /// <summary>
+        /// Initiates a PayFast recurring subscription payment and returns a redirect URL.
+        /// </summary>
+        /// <param name="request">Payment request details.</param>
+        /// <returns>Result with the redirect URL or an error message.</returns>
         public Task<CreateSubscriptionResult> RecuringPayment(Payment request)
         {
             if (request != null)
             {
+                if (!TryGetPublicBaseUri(out var publicBaseUri, out var error))
+                {
+                    _logger.LogError("{Error}", error);
+                    return Task.FromResult(CreateSubscriptionResult.FailureResult(error));
+                }
+
                 var passphrase = _configuration.GetValue<string>("payFast:passphrase");
                 var recurringRequest = new PayFastRequest(passphrase);
 
                 // Merchant Details
                 recurringRequest.merchant_id = _configuration.GetValue<string>("payFast:merchant_id");
                 recurringRequest.merchant_key = _configuration.GetValue<string>("payFast:merchant_key");
-                recurringRequest.return_url = request.returnUrl;
-                recurringRequest.cancel_url = request.cancelUrl;
+
+                // Always use backend-generated HTTPS return/cancel URLs
+                recurringRequest.return_url = BuildPublicUrl(publicBaseUri, "/v1/subscriptions/payfast/return").ToString();
+                recurringRequest.cancel_url = BuildPublicUrl(publicBaseUri, "/v1/subscriptions/payfast/cancel").ToString();
+
+                // Keep notify_url as server-to-server callback endpoint (caller should supply API notify URL)
                 recurringRequest.notify_url = request.notifyUrl;
 
                 // Additional Details
@@ -143,18 +226,33 @@ namespace SAWSCore8API.Services
             }
         }
 
+        /// <summary>
+        /// Initiates a PayFast once-off payment and returns a redirect URL.
+        /// </summary>
+        /// <param name="request">Payment request details.</param>
+        /// <returns>Result with the redirect URL or an error message.</returns>
         public Task<CreateSubscriptionResult> OnceOffPayment(Payment request)
         {
             if (request != null)
             {
+                if (!TryGetPublicBaseUri(out var publicBaseUri, out var error))
+                {
+                    _logger.LogError("{Error}", error);
+                    return Task.FromResult(CreateSubscriptionResult.FailureResult(error));
+                }
+
                 var passphrase = _configuration.GetValue<string>("payFast:passphrase");
                 var onceOffRequest = new PayFastRequest(passphrase);
 
                 // Merchant Details
                 onceOffRequest.merchant_id = _configuration.GetValue<string>("payFast:merchant_id");
                 onceOffRequest.merchant_key = _configuration.GetValue<string>("payFast:merchant_key");
-                onceOffRequest.return_url = request.returnUrl;
-                onceOffRequest.cancel_url = request.cancelUrl;
+
+                // Always use backend-generated HTTPS return/cancel URLs
+                onceOffRequest.return_url = BuildPublicUrl(publicBaseUri, "/v1/subscriptions/payfast/return").ToString();
+                onceOffRequest.cancel_url = BuildPublicUrl(publicBaseUri, "/v1/subscriptions/payfast/cancel").ToString();
+
+                // Keep notify_url as server-to-server callback endpoint (caller should supply API notify URL)
                 onceOffRequest.notify_url = request.notifyUrl;
 
                 // Buyer Details
@@ -176,7 +274,6 @@ namespace SAWSCore8API.Services
 
                 var redirectLink = _configuration.GetValue<string>("payFast:endPoint") + "?" + redirectUrl;
 
-
                 return Task.FromResult(CreateSubscriptionResult.SuccessResult(redirectLink));
             }
             else
@@ -185,18 +282,33 @@ namespace SAWSCore8API.Services
             }
         }
 
+        /// <summary>
+        /// Initiates a PayFast ad-hoc payment and returns a redirect URL.
+        /// </summary>
+        /// <param name="request">Payment request details.</param>
+        /// <returns>Result with the redirect URL or an error message.</returns>
         public Task<CreateSubscriptionResult> AdHocPayment(Payment request)
         {
             if (request != null)
             {
+                if (!TryGetPublicBaseUri(out var publicBaseUri, out var error))
+                {
+                    _logger.LogError("{Error}", error);
+                    return Task.FromResult(CreateSubscriptionResult.FailureResult(error));
+                }
+
                 var passphrase = _configuration.GetValue<string>("payFast:passphrase");
                 var adHocRequest = new PayFastRequest(passphrase);
 
                 // Merchant Details
                 adHocRequest.merchant_id = _configuration.GetValue<string>("payFast:merchant_id");
                 adHocRequest.merchant_key = _configuration.GetValue<string>("payFast:merchant_key");
-                adHocRequest.return_url = request.returnUrl;
-                adHocRequest.cancel_url = request.cancelUrl;
+
+                // Always use backend-generated HTTPS return/cancel URLs
+                adHocRequest.return_url = BuildPublicUrl(publicBaseUri, "/v1/subscriptions/payfast/return").ToString();
+                adHocRequest.cancel_url = BuildPublicUrl(publicBaseUri, "/v1/subscriptions/payfast/cancel").ToString();
+
+                // Keep notify_url as server-to-server callback endpoint (caller should supply API notify URL)
                 adHocRequest.notify_url = request.notifyUrl;
 
                 // Buyer Details
@@ -229,6 +341,12 @@ namespace SAWSCore8API.Services
             }
         }
 
+        /// <summary>
+        /// Processes PayFast Instant Transaction Notification (ITN) messages.
+        /// </summary>
+        /// <param name="payFastNotify">Notification payload from PayFast.</param>
+        /// <returns>Result indicating the processing outcome of the ITN.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if the notification is null.</exception>
         public async Task<NotifyResult> NotifyITN(PayFastNotify payFastNotify)
         {
             if (payFastNotify == null)
@@ -250,6 +368,11 @@ namespace SAWSCore8API.Services
             }
         }
 
+        /// <summary>
+        /// Cancels an active PayFast subscription using the provided token.
+        /// </summary>
+        /// <param name="token">PayFast subscription token.</param>
+        /// <returns>Cancellation result, including a message.</returns>
         public async Task<CancelResult> CancelSubscription(string token)
         {
             if (string.IsNullOrEmpty(token))
@@ -268,7 +391,7 @@ namespace SAWSCore8API.Services
                 BaseAddress = new Uri("https://api.payfast.co.za/")
             };
 
-            var subscriptionCancellation = new PayFastIntegrationClient(client, Options.Create(payFastSettings));
+            var subscriptionCancellation = new PayFastIntegrationClient(client, Microsoft.Extensions.Options.Options.Create(payFastSettings));
 
             var result = await subscriptionCancellation.Cancel(token, istesting);
 
@@ -280,6 +403,11 @@ namespace SAWSCore8API.Services
             return CancelResult.SuccessResult("Successfully cancelled subscription");
         }
 
+        /// <summary>
+        /// Updates an existing subscription record.
+        /// </summary>
+        /// <param name="subscription">Subscription to update.</param>
+        /// <returns>Update operation result.</returns>
         public Task<UpdateResult> UpdateSubscription(Subscription subscription)
         {
             subscription.updated_at = DateTime.Now;
@@ -291,20 +419,35 @@ namespace SAWSCore8API.Services
             return Task.FromResult(UpdateResult.SuccessResultUpdate(subscription.subscriptionId));
         }
 
+        /// <summary>
+        /// Gets a subscription by its identifier.
+        /// </summary>
+        /// <param name="id">Subscription identifier.</param>
+        /// <returns>The subscription if found; otherwise throws if not present.</returns>
         public Subscription GetSubscriptionById(int id)
         {
             return _context.Subscriptions
-                    .Where(d => d.subscriptionId == id)
-                    .First();
+                .Where(d => d.subscriptionId == id)
+                .First();
         }
 
+        /// <summary>
+        /// Gets the active subscription for a user profile.
+        /// </summary>
+        /// <param name="userId">User profile identifier.</param>
+        /// <returns>The active subscription if found; otherwise throws if not present.</returns>
         public Subscription GetActiveSubscriptionByUserProfileId(int userId)
         {
             return _context.Subscriptions
-                    .Where(d => d.userprofileid == userId && d.isactive)
-                    .First();
+                .Where(d => d.userprofileid == userId && d.isactive)
+                .First();
         }
 
+        /// <summary>
+        /// Soft-deletes a subscription by setting deletion flags and timestamps.
+        /// </summary>
+        /// <param name="id">Subscription identifier.</param>
+        /// <returns>Deletion result indicating success or failure.</returns>
         public Task<DeleteResult> DeleteSubscriptionById(int id)
         {
             var subscription = _context.Subscriptions.First(a => a.subscriptionId == id);
@@ -323,6 +466,11 @@ namespace SAWSCore8API.Services
             }
         }
 
+        /// <summary>
+        /// Handles ITN for successful payments by creating a new subscription and deactivating the previous one.
+        /// </summary>
+        /// <param name="payFastNotify">PayFast notification.</param>
+        /// <returns>Notification result indicating success or failure.</returns>
         private async Task<NotifyResult> HandleSuccessfulPayment(PayFastNotify payFastNotify)
         {
             if (!int.TryParse(payFastNotify.custom_int1, out int userId) ||
@@ -335,14 +483,14 @@ namespace SAWSCore8API.Services
 
             var newSubscription = new Subscription
             {
-                subscriptionId = 0,
+                subscriptionId =0,
                 userprofileid = userId,
                 package_name = payFastNotify.custom_str1,
                 package_id = packageId,
                 package_price = packagePrice,
                 start_date = DateTime.Now,
                 end_date = DateTime.Now.AddMonths(12),
-                subscription_duration = 365,
+                subscription_duration =365,
                 subscription_token = payFastNotify.token,
                 isactive = true
             };
@@ -412,16 +560,27 @@ namespace SAWSCore8API.Services
             }
         }
 
+        /// <summary>
+        /// Handles failed payment ITN messages.
+        /// </summary>
+        /// <returns>Failure notification result.</returns>
         private Task<NotifyResult> HandleFailedPayment()
         {
             return Task.FromResult(NotifyResult.FailureResult("Failed to add subscription"));
         }
 
+        /// <summary>
+        /// Handles pending payment ITN messages.
+        /// </summary>
+        /// <returns>Pending notification result.</returns>
         private Task<NotifyResult> HandlePendingPayment()
         {
             return Task.FromResult(NotifyResult.FailureResult("Pending adding of subscription"));
         }
 
+        /// <summary>
+        /// Persists changes to the database.
+        /// </summary>
         public void Save()
         {
             _context.SaveChanges();

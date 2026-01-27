@@ -1,14 +1,18 @@
 using SAWSCore8API.Interfaces;
+using SAWSCore8API.Options;
 using SAWSCore8API.Services;
 
 namespace SAWSCore8API.Configurations
 {
     public static class DependencyInjectionConfig
     {
-        public static IServiceCollection ResolveDependencies(this IServiceCollection services)
+        public static IServiceCollection ResolveDependencies(this IServiceCollection services, IConfiguration configuration)
         {
             // Register HttpClient
             services.AddHttpClient();
+
+            services.Configure<PayFastOptions>(configuration.GetSection("PayFast"));
+
             services.AddScoped<IAdvertService, AdvertService>();
             services.AddScoped<ILookupService, LookupService>();
             services.AddScoped<IAuthenticateService, AuthenticateService>();
@@ -22,8 +26,10 @@ namespace SAWSCore8API.Configurations
             services.AddSingleton<IUriService>(o =>
             {
                 var accessor = o.GetRequiredService<IHttpContextAccessor>();
-                var request = accessor.HttpContext.Request;
-                var uri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent() + request.PathBase);
+                var request = accessor.HttpContext?.Request;
+                var uri = request == null
+                    ? string.Empty
+                    : string.Concat(request.Scheme, "://", request.Host.ToUriComponent() + request.PathBase);
                 return new UriService(uri);
             });
 

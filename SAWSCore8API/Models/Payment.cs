@@ -5,8 +5,8 @@ namespace SAWSCore8API.Models
 {
     public class Payment
     {
-        public string returnUrl { get; set; }
-        public string cancelUrl { get; set; }
+        public string? returnUrl { get; set; }
+        public string? cancelUrl { get; set; }
         public string notifyUrl { get; set; }
         public string name_first { get; set; }
         public string name_last { get; set; }
