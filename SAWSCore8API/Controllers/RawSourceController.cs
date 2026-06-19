@@ -19,7 +19,7 @@ namespace SAWSCore8API.Controllers
         // private const int LASTHOURS = 48;
         private const string FOLDERNAME = "";
         private const int LIMIT = 300;
-
+        private readonly IActivityLoggerService _activityLogger;
         #endregion
 
         #region Constructors

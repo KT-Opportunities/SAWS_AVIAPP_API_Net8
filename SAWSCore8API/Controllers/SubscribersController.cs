@@ -13,6 +13,7 @@ namespace SAWSCore8API.Controllers
         private readonly IPagedService _pagedService;
         private readonly SAWSDbContext _context;
         private ILogger<SubscribersController> _logger;
+        private readonly IActivityLoggerService _activityLogger;
 
         #endregion
 
@@ -20,12 +21,14 @@ namespace SAWSCore8API.Controllers
         public SubscribersController(
             SAWSDbContext context,
             IPagedService pagedService,
-            ILogger<SubscribersController> logger
+            ILogger<SubscribersController> logger,
+            IActivityLoggerService activityLogger
         )
         {
             _context = context;
             _pagedService = pagedService;
             _logger = logger;
+            _activityLogger = activityLogger;
         }
 
         #endregion

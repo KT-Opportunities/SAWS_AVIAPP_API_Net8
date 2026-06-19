@@ -13,6 +13,7 @@ namespace SAWSCore8API.Controllers
         private readonly IPagedService _pagedService;
         private readonly SAWSDbContext _context;
         private ILogger<AdminsController> _logger;
+        private readonly IActivityLoggerService _activityLogger;
 
         #endregion
 
@@ -48,6 +49,33 @@ namespace SAWSCore8API.Controllers
             {
                 var pagedAdmins = await _pagedService.GetPagedAllUsers(filter, role);
                 
+                return new OkObjectResult(pagedAdmins);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to get paged admins");
+                return Problem("Unable to get paged admins");
+            }
+        }
+
+
+        [HttpGet("GetPagedAllActivityLogs")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetPagedAllActivityLogs([FromQuery] PaginationFilter filter)
+        {
+            if (filter == null)
+            {
+                return new BadRequestResult();
+            }
+
+            var role = "Admin";
+
+            try
+            {
+                var pagedAdmins = await _pagedService.GetPagedAllActivityLogs(filter);
+
                 return new OkObjectResult(pagedAdmins);
 
             }

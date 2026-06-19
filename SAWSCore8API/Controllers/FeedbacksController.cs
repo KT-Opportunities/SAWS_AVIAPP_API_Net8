@@ -18,6 +18,7 @@ namespace SAWSCore8API.Controllers
         private readonly SAWSDbContext _context;
         private ILogger<FeedbacksController> _logger;
         public IConfiguration _configuration { get; }
+        private readonly IActivityLoggerService _activityLogger;
 
         #endregion
 

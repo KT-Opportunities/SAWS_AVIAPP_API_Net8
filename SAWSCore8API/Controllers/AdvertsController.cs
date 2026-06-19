@@ -18,6 +18,7 @@ namespace SAWSCore8API.Controllers
         private readonly IAdvertService _advertService;
         private ILogger<AdvertsController> _logger;
         public IConfiguration _configuration { get; }
+        private readonly IActivityLoggerService _activityLogger;
 
         #endregion
 

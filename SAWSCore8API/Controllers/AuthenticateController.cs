@@ -1,12 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SAWSCore8API.Models;
-using SAWSCore8API.DbContexts;
+﻿using DeviceDetectorNET;
+using DeviceDetectorNET.Class;
+using DeviceDetectorNET.Parser;
+using DeviceDetectorNET.Parser.Device;
 using Microsoft.AspNetCore.Identity;
-using SAWSCore8API.Interfaces;
-using SAWSCore8API.Dtos;
-using System.Net.Mime;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using NuGet.Protocol.Core.Types;
+using SAWSCore8API.DbContexts;
 using SAWSCore8API.Dto;
+using SAWSCore8API.Dtos;
+using SAWSCore8API.Interfaces;
+using SAWSCore8API.Models;
 using System.Data;
+using System.Net.Mime;
+using System.Xml.Linq;
 
 namespace SAWSCore8API.Controllers
 {
@@ -23,7 +30,7 @@ namespace SAWSCore8API.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IAuthenticateService _authenticateService;
-
+        private readonly IActivityLoggerService _activityLogger;
         #endregion
 
         #region Constructors
@@ -34,7 +41,8 @@ namespace SAWSCore8API.Controllers
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             RoleManager<IdentityRole> roleManager,
-            IAuthenticateService authenticateService
+            IAuthenticateService authenticateService,
+            IActivityLoggerService activityLogger
             )
         {
             _context = context;
@@ -43,6 +51,7 @@ namespace SAWSCore8API.Controllers
             _signInManager = signInManager;
             _roleManager = roleManager;
             _authenticateService = authenticateService;
+            _activityLogger = activityLogger;
         }
 
         #endregion
@@ -65,6 +74,38 @@ namespace SAWSCore8API.Controllers
                 });
             }
 
+            //get device details;
+            string clientIp = string.Empty;
+            string userAgent = string.Empty;
+            DeviceDetector dd = new DeviceDetector();
+            ActivityLog alog = new ActivityLog();
+            try
+            {
+                var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                    ? remoteIp.MapToIPv4().ToString()
+                                                    : remoteIp?.ToString();
+
+                userAgent = Request.Headers["User-Agent"].ToString();
+
+                if (string.IsNullOrWhiteSpace(userAgent))
+                    return BadRequest("User-Agent header is missing.");
+
+                // Optional: Client Hints (modern browsers)
+                var headers = Request.Headers.ToDictionary(
+                    h => h.Key,
+                    h => h.Value.ToString());
+
+                var clientHints = ClientHints.Factory(headers);
+
+                dd = new DeviceDetector(userAgent, clientHints);
+                dd.Parse();
+            }
+            catch (Exception ex)
+            {
+                //
+            }
+
             try
             {
                 var loginResult = await _authenticateService.LoginUser(appUser);
@@ -72,8 +113,48 @@ namespace SAWSCore8API.Controllers
                 {
                     var firstErrorMessage = loginResult?.ErrorMessages?.FirstOrDefault().Value.FirstOrDefault();
 
+                    //get
+                    alog.activityLogId = 0;
+                    alog.activityType = "login";
+                    alog.remoteipaddress = clientIp;
+                    alog.activityAction = "";//??
+                    alog.activityDescription = "Failed login attempt";
+                    alog.createdby_aspnetusername = appUser.Username;
+                    alog.createdby_aspnetuserId = ""; //appUser.Id.ToString();
+                    //device details
+                    alog.UserAgent = userAgent;
+                    alog.IsMobile = dd.IsMobile();
+                    alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                    alog.Brand = dd.GetBrand() ?? "unknown";
+                    alog.Model = dd.GetModel() ?? "unknown";
+                    alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                    alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                    alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                    alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                    await _activityLogger.LogAsync(HttpContext, alog);
                     return Unauthorized(LoginResultDto.FailureResult(firstErrorMessage));
                 }
+
+
+                alog.activityLogId = 0;
+                alog.activityType = "login";
+                alog.remoteipaddress = clientIp;
+                alog.activityAction = "";//??
+                alog.activityDescription = "User logged in the application";
+                alog.createdby_aspnetusername = appUser.Username;
+                alog.createdby_aspnetuserId = loginResult.AspUserId;//appUser.Id.ToString();
+                //device details
+                alog.UserAgent = userAgent;
+                alog.IsMobile = dd.IsMobile();
+                alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                alog.Brand = dd.GetBrand() ?? "unknown";
+                alog.Model = dd.GetModel() ?? "unknown";
+                alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                await _activityLogger.LogAsync(HttpContext, alog);
+
 
                 return Ok(loginResult);
             }
@@ -110,6 +191,66 @@ namespace SAWSCore8API.Controllers
                     return new BadRequestObjectResult("Admin user not added");
                 }
 
+                //log initialisation
+                string clientIp = string.Empty;
+                string userAgent = string.Empty;
+                DeviceDetector dd = new DeviceDetector();
+                ActivityLog alog = new ActivityLog();
+                try
+                {
+                    var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                    clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                        ? remoteIp.MapToIPv4().ToString()
+                                                        : remoteIp?.ToString();
+
+                    userAgent = Request.Headers["User-Agent"].ToString();
+
+                    if (string.IsNullOrWhiteSpace(userAgent))
+                        return BadRequest("User-Agent header is missing.");
+
+                    // Optional: Client Hints (modern browsers)
+                    var headers = Request.Headers.ToDictionary(
+                        h => h.Key,
+                        h => h.Value.ToString());
+
+                    var clientHints = ClientHints.Factory(headers);
+
+                    dd = new DeviceDetector(userAgent, clientHints);
+                    dd.Parse();
+                }
+                catch (Exception ex)
+                {
+                    //
+                }
+
+
+
+                alog.activityLogId = 0;
+                alog.activityType = "RegisterAdmin";
+                alog.remoteipaddress = clientIp;
+                alog.activityAction = "";//??
+                alog.activityDescription = "Admin user added successfully";
+                alog.createdby_aspnetusername = appUser.Username;//TODO:modify method to require Authorize and pull user info
+                alog.createdby_aspnetuserId = "";//loginResult.AspUserId;//TODO:modify method to require Authorize and pull user info
+                                                 //device details
+                alog.UserAgent = userAgent;
+                alog.IsMobile = dd.IsMobile();
+                alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                alog.Brand = dd.GetBrand() ?? "unknown";
+                alog.Model = dd.GetModel() ?? "unknown";
+                alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                try
+                {
+                    await _activityLogger.LogAsync(HttpContext, alog);
+                }
+                catch (Exception ex)
+                {
+                    //nlog the issue
+                }
+
                 return Ok(newAdminResult);
 
             }
@@ -132,8 +273,67 @@ namespace SAWSCore8API.Controllers
                 return new BadRequestResult();
             }
 
+            //log initialisation
+            string clientIp = string.Empty;
+            string userAgent = string.Empty;
+            DeviceDetector dd = new DeviceDetector();
+            ActivityLog alog = new ActivityLog();
+            try
+            {
+                var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                    ? remoteIp.MapToIPv4().ToString()
+                                                    : remoteIp?.ToString();
+
+                userAgent = Request.Headers["User-Agent"].ToString();
+
+                if (string.IsNullOrWhiteSpace(userAgent))
+                    return BadRequest("User-Agent header is missing.");
+
+                // Optional: Client Hints (modern browsers)
+                var headers = Request.Headers.ToDictionary(
+                    h => h.Key,
+                    h => h.Value.ToString());
+
+                var clientHints = ClientHints.Factory(headers);
+
+                dd = new DeviceDetector(userAgent, clientHints);
+                dd.Parse();
+            }
+            catch (Exception ex)
+            {
+                //
+            }
+
+
             if (UserExists(appUser.Email))
             {
+                alog.activityLogId = 0;
+                alog.activityType = "RegisterSubscriber";
+                alog.remoteipaddress = clientIp;
+                alog.activityAction = "";//??
+                alog.activityDescription = "Subscriber user email already exist";
+                alog.createdby_aspnetusername = appUser.Username;//TODO:modify method to require Authorize and pull user info
+                alog.createdby_aspnetuserId = "";//loginResult.AspUserId;//TODO:modify method to require Authorize and pull user info
+                                                 //device details
+                alog.UserAgent = userAgent;
+                alog.IsMobile = dd.IsMobile();
+                alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                alog.Brand = dd.GetBrand() ?? "unknown";
+                alog.Model = dd.GetModel() ?? "unknown";
+                alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                try
+                {
+                    await _activityLogger.LogAsync(HttpContext, alog);
+                }
+                catch (Exception ex)
+                {
+                    //nlog the issue
+                }
+
                 return new BadRequestObjectResult(new ResponseDto
                 {
                     Status = "Failed",
@@ -148,6 +348,35 @@ namespace SAWSCore8API.Controllers
                 if (!newSubscriberResult.Success)
                 {
                     return new BadRequestObjectResult("Subscriber user not added");
+                }
+
+                
+
+
+                alog.activityLogId = 0;
+                alog.activityType = "RegisterSubscriber";
+                alog.remoteipaddress = clientIp;
+                alog.activityAction = "";//??
+                alog.activityDescription = "Subscriber added successfully";
+                alog.createdby_aspnetusername = appUser.Username;//TODO:modify method to require Authorize and pull user info
+                alog.createdby_aspnetuserId = "";//loginResult.AspUserId;//TODO:modify method to require Authorize and pull user info
+                                                 //device details
+                alog.UserAgent = userAgent;
+                alog.IsMobile = dd.IsMobile();
+                alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                alog.Brand = dd.GetBrand() ?? "unknown";
+                alog.Model = dd.GetModel() ?? "unknown";
+                alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                try
+                {
+                    await _activityLogger.LogAsync(HttpContext, alog);
+                }
+                catch (Exception ex)
+                {
+                    //nlog the issue
                 }
 
                 return Ok(newSubscriberResult);
@@ -189,12 +418,72 @@ namespace SAWSCore8API.Controllers
                 {
                     return NotFound();
                 }*/
-
+                
                 var updateUserProfileResult = await _authenticateService.UpdateUserProfile(userProfile);
 
                 if (updateUserProfileResult.Success)
                 {
                     await _authenticateService.UpdateIdentityEmail(userProfile);
+
+
+                    //log initialisation
+                    string clientIp = string.Empty;
+                    string userAgent = string.Empty;
+                    DeviceDetector dd = new DeviceDetector();
+                    ActivityLog alog = new ActivityLog();
+                    try
+                    {
+                        var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                        clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                            ? remoteIp.MapToIPv4().ToString()
+                                                            : remoteIp?.ToString();
+
+                        userAgent = Request.Headers["User-Agent"].ToString();
+
+                        if (string.IsNullOrWhiteSpace(userAgent))
+                            return BadRequest("User-Agent header is missing.");
+
+                        // Optional: Client Hints (modern browsers)
+                        var headers = Request.Headers.ToDictionary(
+                            h => h.Key,
+                            h => h.Value.ToString());
+
+                        var clientHints = ClientHints.Factory(headers);
+
+                        dd = new DeviceDetector(userAgent, clientHints);
+                        dd.Parse();
+                    }
+                    catch (Exception ex)
+                    {
+                        //
+                    }
+
+                    alog.activityLogId = 0;
+                    alog.activityType = "UpdateUserProfile";
+                    alog.remoteipaddress = clientIp;
+                    alog.activityAction = "";//??
+                    alog.activityDescription = "Updating user profile successfull";
+                    alog.createdby_aspnetusername = userProfile.email;//TODO:modify method to require Authorize and pull user info
+                    alog.createdby_aspnetuserId = userProfile.aspuid;//loginResult.AspUserId;//TODO:modify method to require Authorize and pull user info
+                                                     //device details
+                    alog.UserAgent = userAgent;
+                    alog.IsMobile = dd.IsMobile();
+                    alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                    alog.Brand = dd.GetBrand() ?? "unknown";
+                    alog.Model = dd.GetModel() ?? "unknown";
+                    alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                    alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                    alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                    alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                    try
+                    {
+                        await _activityLogger.LogAsync(HttpContext, alog);
+                    }
+                    catch (Exception ex)
+                    {
+                        //nlog the issue
+                    }
+
 
                     return Ok(new Response
                     {
@@ -240,6 +529,63 @@ namespace SAWSCore8API.Controllers
 
                 if (result.Success)
                 {
+                    //log initialisation
+                    string clientIp = string.Empty;
+                    string userAgent = string.Empty;
+                    DeviceDetector dd = new DeviceDetector();
+                    ActivityLog alog = new ActivityLog();
+                    try
+                    {
+                        var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                        clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                            ? remoteIp.MapToIPv4().ToString()
+                                                            : remoteIp?.ToString();
+
+                        userAgent = Request.Headers["User-Agent"].ToString();
+
+                        if (string.IsNullOrWhiteSpace(userAgent))
+                            return BadRequest("User-Agent header is missing.");
+
+                        // Optional: Client Hints (modern browsers)
+                        var headers = Request.Headers.ToDictionary(
+                            h => h.Key,
+                            h => h.Value.ToString());
+
+                        var clientHints = ClientHints.Factory(headers);
+
+                        dd = new DeviceDetector(userAgent, clientHints);
+                        dd.Parse();
+                    }
+                    catch (Exception ex)
+                    {
+                        //
+                    }
+
+                    alog.activityLogId = 0;
+                    alog.activityType = "DeleteUserProfile";
+                    alog.remoteipaddress = clientIp;
+                    alog.activityAction = "";//??
+                    alog.activityDescription = "Deleting user profile successfull";
+                    alog.createdby_aspnetusername = "";//TODO:modify method to require Authorize and pull user info
+                    alog.createdby_aspnetuserId = "";//TODO:modify method to require Authorize and pull user info
+                    //device details
+                    alog.UserAgent = userAgent;
+                    alog.IsMobile = dd.IsMobile();
+                    alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                    alog.Brand = dd.GetBrand() ?? "unknown";
+                    alog.Model = dd.GetModel() ?? "unknown";
+                    alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                    alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                    alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                    alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                    try
+                    {
+                        await _activityLogger.LogAsync(HttpContext, alog);
+                    }
+                    catch (Exception ex)
+                    {
+                        //nlog the issue
+                    }
                     return Ok(result);
                 } else
                 {
@@ -335,6 +681,64 @@ namespace SAWSCore8API.Controllers
 
                 if (result.Success)
                 {
+                    //log initialisation
+                    string clientIp = string.Empty;
+                    string userAgent = string.Empty;
+                    DeviceDetector dd = new DeviceDetector();
+                    ActivityLog alog = new ActivityLog();
+                    try
+                    {
+                        var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                        clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                            ? remoteIp.MapToIPv4().ToString()
+                                                            : remoteIp?.ToString();
+
+                        userAgent = Request.Headers["User-Agent"].ToString();
+
+                        if (string.IsNullOrWhiteSpace(userAgent))
+                            return BadRequest("User-Agent header is missing.");
+
+                        // Optional: Client Hints (modern browsers)
+                        var headers = Request.Headers.ToDictionary(
+                            h => h.Key,
+                            h => h.Value.ToString());
+
+                        var clientHints = ClientHints.Factory(headers);
+
+                        dd = new DeviceDetector(userAgent, clientHints);
+                        dd.Parse();
+                    }
+                    catch (Exception ex)
+                    {
+                        //
+                    }
+
+                    alog.activityLogId = 0;
+                    alog.activityType = "RequestPasswordReset";
+                    alog.remoteipaddress = clientIp;
+                    alog.activityAction = "";//??
+                    alog.activityDescription = "password reset requested";
+                    alog.createdby_aspnetusername = email;//TODO:modify method to require Authorize and pull user info
+                    alog.createdby_aspnetuserId = "";//TODO:modify method to require Authorize and pull user info
+                    //device details
+                    alog.UserAgent = userAgent;
+                    alog.IsMobile = dd.IsMobile();
+                    alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                    alog.Brand = dd.GetBrand() ?? "unknown";
+                    alog.Model = dd.GetModel() ?? "unknown";
+                    alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                    alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                    alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                    alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                    try
+                    {
+                        await _activityLogger.LogAsync(HttpContext, alog);
+                    }
+                    catch (Exception ex)
+                    {
+                        //nlog the issue
+                    }
+
                     return Ok(result);
                 }
                 else
@@ -376,12 +780,97 @@ namespace SAWSCore8API.Controllers
             {
                 var result = await _authenticateService.ResetPassword(reset);
 
+                //log initialisation
+                string clientIp = string.Empty;
+                string userAgent = string.Empty;
+                DeviceDetector dd = new DeviceDetector();
+                ActivityLog alog = new ActivityLog();
+                try
+                {
+                    var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                    clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                        ? remoteIp.MapToIPv4().ToString()
+                                                        : remoteIp?.ToString();
+
+                    userAgent = Request.Headers["User-Agent"].ToString();
+
+                    if (string.IsNullOrWhiteSpace(userAgent))
+                        return BadRequest("User-Agent header is missing.");
+
+                    // Optional: Client Hints (modern browsers)
+                    var headers = Request.Headers.ToDictionary(
+                        h => h.Key,
+                        h => h.Value.ToString());
+
+                    var clientHints = ClientHints.Factory(headers);
+
+                    dd = new DeviceDetector(userAgent, clientHints);
+                    dd.Parse();
+                }
+                catch (Exception ex)
+                {
+                    //
+                }
+
                 if (result.Success)
                 {
+                    
+
+                    alog.activityLogId = 0;
+                    alog.activityType = "ResetPassword";
+                    alog.remoteipaddress = clientIp;
+                    alog.activityAction = "";//??
+                    alog.activityDescription = "password reset successfull";
+                    alog.createdby_aspnetusername = reset.email;//TODO:modify method to require Authorize and pull user info
+                    alog.createdby_aspnetuserId = "";//TODO:modify method to require Authorize and pull user info
+                    //device details
+                    alog.UserAgent = userAgent;
+                    alog.IsMobile = dd.IsMobile();
+                    alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                    alog.Brand = dd.GetBrand() ?? "unknown";
+                    alog.Model = dd.GetModel() ?? "unknown";
+                    alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                    alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                    alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                    alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                    try
+                    {
+                        await _activityLogger.LogAsync(HttpContext, alog);
+                    }
+                    catch (Exception ex)
+                    {
+                        //nlog the issue
+                    }
                     return Ok(result);
                 }
                 else
                 {
+                    alog.activityLogId = 0;
+                    alog.activityType = "ResetPassword";
+                    alog.remoteipaddress = clientIp;
+                    alog.activityAction = "";//??
+                    alog.activityDescription = "password reset failed";
+                    alog.createdby_aspnetusername = reset.email;//TODO:modify method to require Authorize and pull user info
+                    alog.createdby_aspnetuserId = "";//TODO:modify method to require Authorize and pull user info
+                    //device details
+                    alog.UserAgent = userAgent;
+                    alog.IsMobile = dd.IsMobile();
+                    alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                    alog.Brand = dd.GetBrand() ?? "unknown";
+                    alog.Model = dd.GetModel() ?? "unknown";
+                    alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                    alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                    alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                    alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                    try
+                    {
+                        await _activityLogger.LogAsync(HttpContext, alog);
+                    }
+                    catch (Exception ex)
+                    {
+                        //nlog the issue
+                    }
+
                     return new UnauthorizedObjectResult(result);
                 }
 
@@ -525,6 +1014,39 @@ namespace SAWSCore8API.Controllers
         //     }
         // }
 
+        //[HttpGet("deviceinfo")]
+        //public IActionResult GetDeviceInfo()
+        //{
+        //    var userAgent = Request.Headers["User-Agent"].ToString();
+
+        //    if (string.IsNullOrWhiteSpace(userAgent))
+        //        return BadRequest("User-Agent header is missing.");
+
+        //    // Optional: Client Hints (modern browsers)
+        //    var headers = Request.Headers.ToDictionary(
+        //        h => h.Key,
+        //        h => h.Value.ToString());
+
+        //    var clientHints = ClientHints.Factory(headers);
+
+        //    var dd = new DeviceDetector(userAgent, clientHints);
+        //    dd.Parse();
+
+        //    var deviceInfo = new ActivityLog
+        //    {
+        //        UserAgent = userAgent,
+        //        IsMobile = dd.IsMobile(),
+        //        DeviceType = dd.GetDeviceName() ?? "unknown",
+        //        Brand = dd.GetBrand() ?? "unknown",
+        //        Model = dd.GetModel() ?? "unknown",
+        //        OsName = dd.GetOs().Match?.Name ?? "unknown",
+        //        OsVersion = dd.GetOs().Match?.Version ?? "unknown",
+        //        BrowserName = dd.GetClient().Match?.Name ?? "unknown",
+        //        BrowserVersion = dd.GetClient().Match?.Version ?? "unknown"
+        //    };
+
+        //    return Ok(deviceInfo);
+        //}
 
         #region Helper Methods
 
