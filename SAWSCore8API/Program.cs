@@ -23,14 +23,13 @@ const string DefaultCorsPolicy = "DefaultCorsPolicy";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(DefaultCorsPolicy,
-        builder =>
-        {
-            builder.SetIsOriginAllowed(_ => true)
-                   .AllowAnyHeader()
-                   .AllowAnyMethod()
-                   .AllowCredentials();
-        });
+    options.AddPolicy("DefaultCorsPolicy", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
 builder.Services.AddDbContext<SAWSDbContext>(options =>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SAWSCore8API.DbContexts;
+using SAWSCore8API.DTOs;
 using SAWSCore8API.DTOs.FlightTemplates;
 using SAWSCore8API.Models;
 using System.Security.Claims;
@@ -133,6 +134,87 @@ namespace SAWSCore8API.Controllers
                 c.Type,
                 c.Value
             }));
+        }
+    }
+    [Route("api/v1/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class OperationalSettingsController : ControllerBase
+    {
+        private readonly SAWSDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public OperationalSettingsController(
+            SAWSDbContext context,
+            UserManager<ApplicationUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Save(
+            [FromBody] SaveOperationalSettingsRequest request)
+        {
+            var username = User.FindFirstValue(ClaimTypes.Name);
+
+            var user = await _userManager.FindByNameAsync(username);
+
+            if (user == null)
+                return Unauthorized();
+
+            var settings = await _context.OperationalSettings
+                .FirstOrDefaultAsync(x =>
+                    x.createdby_aspnetuserId == user.Id &&
+                    !x.isdeleted);
+
+            if (settings == null)
+            {
+                settings = new OperationalSettings
+                {
+                    PilotName = request.PilotName,
+                    PilotLicense = request.PilotLicense,
+                    DispatcherName = request.DispatcherName,
+                    DispatcherLicense = request.DispatcherLicense,
+                    createdby_aspnetuserId = user.Id,
+                    createdby_aspnetusername = user.UserName,
+                    created_at = DateTime.Now,
+                    updated_at = DateTime.Now,
+                    isdeleted = false
+                };
+
+                _context.OperationalSettings.Add(settings);
+            }
+            else
+            {
+                settings.PilotName = request.PilotName;
+                settings.PilotLicense = request.PilotLicense;
+                settings.DispatcherName = request.DispatcherName;
+                settings.DispatcherLicense = request.DispatcherLicense;
+                settings.updated_at = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(settings);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            var username = User.FindFirstValue(ClaimTypes.Name);
+
+            var user = await _userManager.FindByNameAsync(username);
+
+            if (user == null)
+                return Unauthorized();
+
+            var settings = await _context.OperationalSettings
+                .FirstOrDefaultAsync(x =>
+                    x.createdby_aspnetuserId == user.Id &&
+                    !x.isdeleted);
+
+            return Ok(settings);
         }
     }
 }
