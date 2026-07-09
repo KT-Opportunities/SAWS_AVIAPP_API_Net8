@@ -218,45 +218,59 @@ namespace SAWSCore8API.Controllers
             {
                 var adverts = _advertService.GetAllAdverts();
 
-                var app_url = _configuration["AppURL"];
                 var host_location = _configuration["HostLocation"];
-                var rootPath = _configuration["rootPath"];
 
-                var toReturn = adverts.Select(ad => new AdvertDto
+                var toReturn = new List<AdvertDto>();
+
+                foreach (var ad in adverts)
                 {
-                    advertId = ad.advertId,
-                    advert_caption = ad.advert_caption,
-                    advert_url = ad.advert_url,
-                    file_url = host_location + '/' + ad.DocAdverts.FirstOrDefault()?.DocTypeName + "/" + ad.advertId + "/" + ad.DocAdverts.FirstOrDefault()?.file_origname
-                }).ToList();
+                    var doc = ad.DocAdverts.FirstOrDefault();
 
-                foreach (var item in toReturn)
-                {
-                    FileInfo fileInfo = new FileInfo(item.file_url);
-                    DateTime fileModDateTime = fileInfo.LastWriteTime;
-
-                    using (FileStream fileStream = new FileStream(item.file_url, FileMode.Open, FileAccess.Read))
+                    if (doc == null)
                     {
-                        using (MemoryStream memoryStream = new MemoryStream())
-                        {
-                            await fileStream.CopyToAsync(memoryStream);
-                            memoryStream.Position = 0;
-                            item.file_url = Convert.ToBase64String(memoryStream.ToArray());
-                        }
+                        _logger.LogWarning($"Advert {ad.advertId} has no document.");
+                        continue;
                     }
 
+                    var filePath = Path.Combine(
+                        host_location,
+                        doc.DocTypeName,
+                        ad.advertId.ToString(),
+                        doc.file_origname
+                    );
 
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        _logger.LogWarning($"Advert image not found: {filePath}");
+                        continue;
+                    }
+
+                    string base64Image;
+
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    using (MemoryStream memoryStream = new MemoryStream())
+                    {
+                        await fileStream.CopyToAsync(memoryStream);
+                        base64Image = Convert.ToBase64String(memoryStream.ToArray());
+                    }
+
+                    toReturn.Add(new AdvertDto
+                    {
+                        advertId = ad.advertId,
+                        advert_caption = ad.advert_caption,
+                        advert_url = ad.advert_url,
+                        file_url = base64Image
+                    });
                 }
-                return new OkObjectResult(toReturn);
 
+                return Ok(toReturn);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception from AdvertsController.GetAllAdverts");
-                return Problem("Unable to get the adverts");
+                return Problem(ex.ToString());
             }
         }
-
         [HttpGet("GetAdvertByAdvertId")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Advert))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
