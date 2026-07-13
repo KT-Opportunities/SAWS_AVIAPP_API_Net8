@@ -183,5 +183,23 @@ namespace SAWSCore8API.Services
 
         }
 
+        public async Task<ResponseModel<List<ActivityLog>>> GetPagedAllActivityLogs([FromQuery] PaginationFilter filter)
+        {
+            var route = _httpContextAccessor.HttpContext?.Request.Path.Value;
+            var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
+
+            var pagedData = _context.ActivityLogs
+            .OrderByDescending(d => d.created_at)
+            .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+            .Take(validFilter.PageSize)
+            .ToList();
+
+            var totalRecords = _context.ActivityLogs.Count();
+
+            var pagedReponse = PaginationConfig.CreatePagedReponse<ActivityLog>(pagedData, validFilter, totalRecords, _uriService, route);
+
+            return pagedReponse;
+
+        }
     }
 }

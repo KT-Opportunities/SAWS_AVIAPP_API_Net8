@@ -1,3 +1,4 @@
+using DeviceDetectorNET.Parser.Device;
 using SAWSCore8API.Interfaces;
 using SAWSCore8API.Options;
 using SAWSCore8API.Services;
@@ -22,6 +23,7 @@ namespace SAWSCore8API.Configurations
             services.AddScoped<IRawSourceService, RawSourceService>();
             services.AddScoped<IPagedService, PagedService>();
             services.AddTransient<IEmailService, EmailService>();
+            services.AddScoped<IActivityLoggerService, ActivityLoggerService>();
 
             services.AddSingleton<IUriService>(o =>
             {

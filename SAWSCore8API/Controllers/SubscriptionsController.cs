@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using SAWSCore8API.Dtos;
 using PayFast.AspNetCore;
 using PayFast;
+using DeviceDetectorNET;
 
 namespace SAWSCore8API.Controllers
 {
@@ -33,6 +34,7 @@ namespace SAWSCore8API.Controllers
         private readonly ISubscriptionService _subscriptionService;
 
         private ILogger<SubscriptionsController> _logger;
+        private readonly IActivityLoggerService _activityLogger;
 
         #endregion
 
@@ -47,12 +49,14 @@ namespace SAWSCore8API.Controllers
         public SubscriptionsController(
             SAWSDbContext context,
             ISubscriptionService subscriptionService,
-            ILogger<SubscriptionsController> logger
+            ILogger<SubscriptionsController> logger,
+            IActivityLoggerService activityLogger
             )
         {
             _context = context;
             _subscriptionService = subscriptionService;
             _logger = logger;
+            _activityLogger = activityLogger;
         }
 
         #endregion
@@ -87,6 +91,39 @@ namespace SAWSCore8API.Controllers
                 });
             }
 
+            //log initialisation
+            string clientIp = string.Empty;
+            string userAgent = string.Empty;
+            DeviceDetector dd = new DeviceDetector();
+            ActivityLog alog = new ActivityLog();
+            try
+            {
+                var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                clientIp = remoteIp?.IsIPv4MappedToIPv6 == true
+                                                    ? remoteIp.MapToIPv4().ToString()
+                                                    : remoteIp?.ToString();
+
+                userAgent = Request.Headers["User-Agent"].ToString();
+
+                if (string.IsNullOrWhiteSpace(userAgent))
+                    return BadRequest("User-Agent header is missing.");
+
+                // Optional: Client Hints (modern browsers)
+                var headers = Request.Headers.ToDictionary(
+                    h => h.Key,
+                    h => h.Value.ToString());
+
+                var clientHints = ClientHints.Factory(headers);
+
+                dd = new DeviceDetector(userAgent, clientHints);
+                dd.Parse();
+            }
+            catch (Exception ex)
+            {
+                //
+            }
+
+
             try
             {
                 if (subscription.subscriptionId ==0)
@@ -96,6 +133,32 @@ namespace SAWSCore8API.Controllers
 
                     if (newSubscriptionResult.Success)
                     {
+                        alog.activityLogId = 0;
+                        alog.activityType = "subscription";
+                        alog.remoteipaddress = clientIp;
+                        alog.activityAction = "";//??
+                        alog.activityDescription = "new subscription added";
+                        alog.createdby_aspnetusername = "";//appUser.Username;//TODO:modify method to require Authorize and pull user info
+                        alog.createdby_aspnetuserId = "";//loginResult.AspUserId;//TODO:modify method to require Authorize and pull user info
+                        //device details
+                        alog.UserAgent = userAgent;
+                        alog.IsMobile = dd.IsMobile();
+                        alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                        alog.Brand = dd.GetBrand() ?? "unknown";
+                        alog.Model = dd.GetModel() ?? "unknown";
+                        alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                        alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                        alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                        alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                        try
+                        {
+                            await _activityLogger.LogAsync(HttpContext, alog);
+                        }
+                        catch (Exception ex) 
+                        { 
+                            //nlog the issue
+                        }
+
                         return Ok(newSubscriptionResult);
                     }
 
@@ -120,6 +183,31 @@ namespace SAWSCore8API.Controllers
 
                     if (newSubscriptionResult.Success)
                     {
+                        alog.activityLogId = 0;
+                        alog.activityType = "subscription";
+                        alog.remoteipaddress = clientIp;
+                        alog.activityAction = "";//??
+                        alog.activityDescription = "subscription updated";
+                        alog.createdby_aspnetusername = "";//appUser.Username;//TODO:modify method to require Authorize and pull user info
+                        alog.createdby_aspnetuserId = "";//loginResult.AspUserId;//TODO:modify method to require Authorize and pull user info
+                        //device details
+                        alog.UserAgent = userAgent;
+                        alog.IsMobile = dd.IsMobile();
+                        alog.DeviceType = dd.GetDeviceName() ?? "unknown";
+                        alog.Brand = dd.GetBrand() ?? "unknown";
+                        alog.Model = dd.GetModel() ?? "unknown";
+                        alog.OsName = dd.GetOs().Match?.Name ?? "unknown";
+                        alog.OsVersion = dd.GetOs().Match?.Version ?? "unknown";
+                        alog.BrowserName = dd.GetClient().Match?.Name ?? "unknown";
+                        alog.BrowserVersion = dd.GetClient().Match?.Version ?? "unknown";
+                        try
+                        {
+                            await _activityLogger.LogAsync(HttpContext, alog);
+                        }
+                        catch (Exception ex)
+                        {
+                            //nlog the issue
+                        }
                         return Ok(newSubscriptionResult);
                     }
 

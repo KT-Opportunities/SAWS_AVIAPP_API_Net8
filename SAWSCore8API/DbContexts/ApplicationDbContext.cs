@@ -138,4 +138,7 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<DocFeedback> DocFeedbacks { get; set; }
     public DbSet<Package> Package { get; set; }
     public DbSet<AdvertClick> AdvertClicks { get; set; }
+    public DbSet<ActivityLog> ActivityLogs { get; set; }
+    public DbSet<FlightTemplate> FlightTemplates { get; set; }
+    public DbSet<OperationalSettings> OperationalSettings { get; set; }
 }

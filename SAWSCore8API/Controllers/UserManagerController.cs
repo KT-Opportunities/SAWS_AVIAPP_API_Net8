@@ -13,6 +13,7 @@ namespace SAWSCore8API.Controllers
         private readonly IPagedService _pagedService;
         private readonly SAWSDbContext _context;
         private ILogger<AdminsController> _logger;
+        private readonly IActivityLoggerService _activityLogger;
 
         #endregion
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SAWSCore8API.DbContexts;
 
@@ -11,9 +12,11 @@ using SAWSCore8API.DbContexts;
 namespace SAWSCore8API.Migrations
 {
     [DbContext(typeof(SAWSDbContext))]
-    partial class SAWSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260708072148_AddOperationalSettings")]
+    partial class AddOperationalSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SAWSCore8API.DbContexts;
 
@@ -11,9 +12,11 @@ using SAWSCore8API.DbContexts;
 namespace SAWSCore8API.Migrations
 {
     [DbContext(typeof(SAWSDbContext))]
-    partial class SAWSDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260618123545_ActivityLogDBChange")]
+    partial class ActivityLogDBChange
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -637,117 +640,6 @@ namespace SAWSCore8API.Migrations
                     b.HasIndex("feedbackId");
 
                     b.ToTable("FeedbackMessage");
-                });
-
-            modelBuilder.Entity("SAWSCore8API.Models.FlightTemplate", b =>
-                {
-                    b.Property<int>("flightTemplateId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("flightTemplateId"));
-
-                    b.Property<DateTime?>("created_at")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("createdby_aspnetuserId")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("createdby_aspnetusername")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<DateTime?>("deleted_at")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("departureICAO")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("destinationICAO")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("enRouteICAO")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("etd")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("ete")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("flightNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool?>("isdeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("templateName")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<DateTime?>("updated_at")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("flightTemplateId");
-
-                    b.ToTable("FlightTemplate");
-                });
-
-            modelBuilder.Entity("SAWSCore8API.Models.OperationalSettings", b =>
-                {
-                    b.Property<int>("OperationalSettingsId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OperationalSettingsId"));
-
-                    b.Property<string>("DispatcherLicense")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DispatcherName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PilotLicense")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PilotName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("created_at")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("createdby_aspnetuserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("createdby_aspnetusername")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("isdeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("updated_at")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("OperationalSettingsId");
-
-                    b.ToTable("OperationalSettings");
                 });
 
             modelBuilder.Entity("SAWSCore8API.Models.Package", b =>
