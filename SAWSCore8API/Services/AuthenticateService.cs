@@ -8,6 +8,8 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
+using SAWSCore8API.Dtos;
+using System.Security.Cryptography;
 
 namespace SAWSCore8API.Services
 {
@@ -455,7 +457,47 @@ namespace SAWSCore8API.Services
             }
 
         }
+        public async Task<CreatePasswordResult> RequestPasswordResetOTP(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return CreatePasswordResult.SuccessResult("If the email exists, an OTP has been sent.");
 
+            var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var expiresAt = DateTime.UtcNow.AddMinutes(10);
+
+            _context.PasswordResetOtps.RemoveRange(_context.PasswordResetOtps.Where(x => x.Email == email));
+            _context.PasswordResetOtps.Add(new PasswordResetOtp { Email = email, OTP = otp, ExpiresAt = expiresAt });
+            await _context.SaveChangesAsync();
+
+            // RETURN OTP IN DATA FOR TESTING
+            return CreatePasswordResult.SuccessWithData("OTP generated", new
+            {
+                Email = email,
+                OTP = otp,
+                ExpiresAt = expiresAt
+            });
+        }
+
+        public async Task<CreatePasswordResult> VerifyOTPAndResetPassword(VerifyOTPDto dto)
+        {
+            var otpRecord = await _context.PasswordResetOtps.FirstOrDefaultAsync(x => x.Email == dto.Email && x.OTP == dto.OTP);
+            if (otpRecord == null) return CreatePasswordResult.FailureResult("Invalid OTP");
+            if (otpRecord.ExpiresAt < DateTime.UtcNow) return CreatePasswordResult.FailureResult("OTP has expired");
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null) return CreatePasswordResult.FailureResult("User not found");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+
+            if (result.Succeeded)
+            {
+                _context.PasswordResetOtps.Remove(otpRecord);
+                await _context.SaveChangesAsync();
+                return CreatePasswordResult.SuccessResult("Password reset successfully");
+            }
+            return CreatePasswordResult.FailureResult(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
         public void Save()
         {
             _context.SaveChanges();

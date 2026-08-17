@@ -1,5 +1,6 @@
 using SAWSCore8API.Models;
 using Microsoft.AspNetCore.Mvc;
+using SAWSCore8API.Dtos;
 
 namespace SAWSCore8API.Interfaces
 {
@@ -16,6 +17,8 @@ namespace SAWSCore8API.Interfaces
         Task<CreatePasswordResult> RequestPasswordReset(string email);
         Task<CreatePasswordResult> ResetPassword(IDResetPassword reset);
         Task<CreatePasswordResult> SendLogInCredentialsEmail(IDCredentials credentials);
+        Task<CreatePasswordResult> RequestPasswordResetOTP(string email);
+        Task<CreatePasswordResult> VerifyOTPAndResetPassword(VerifyOTPDto dto);
         void Save();
     }
 }

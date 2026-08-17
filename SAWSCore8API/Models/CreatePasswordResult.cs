@@ -9,10 +9,11 @@ namespace SAWSCore8API.Models
         // public string resetToken { get; set; }
         public string SuccessMessage{ get; set; }
         public string ErrorMessage { get; set; }
+        public object? Data { get; set; }
 
         public static CreatePasswordResult SuccessResult(string SuccessMessage)
         {
-            return new CreatePasswordResult
+            return new CreatePasswordResult 
             {
                 Success = true,
                 SuccessMessage = SuccessMessage
@@ -25,6 +26,16 @@ namespace SAWSCore8API.Models
             {
                 Success = false,
                 ErrorMessage = errorMessage
+            };
+        }
+
+        public static CreatePasswordResult SuccessWithData(string SuccessMessage, object data)
+        {
+            return new CreatePasswordResult
+            {
+                Success = true,
+                SuccessMessage = SuccessMessage,
+                Data = data
             };
         }
     }
