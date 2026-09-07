@@ -2,7 +2,7 @@ using DeviceDetectorNET.Parser.Device;
 using SAWSCore8API.Interfaces;
 using SAWSCore8API.Options;
 using SAWSCore8API.Services;
-
+using Microsoft.AspNetCore.Identity.UI.Services;
 namespace SAWSCore8API.Configurations
 {
     public static class DependencyInjectionConfig
@@ -22,7 +22,7 @@ namespace SAWSCore8API.Configurations
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IRawSourceService, RawSourceService>();
             services.AddScoped<IPagedService, PagedService>();
-            services.AddTransient<IEmailService, EmailService>();
+            services.AddTransient<IEmailSender, EmailSender>();
             services.AddScoped<IActivityLoggerService, ActivityLoggerService>();
 
             services.AddSingleton<IUriService>(o =>

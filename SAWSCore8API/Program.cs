@@ -8,8 +8,9 @@ using SAWSCore8API.DbContexts;
 using SAWSCore8API.Configurations;
 using System.Reflection;
 using System.Text;
+using SAWSCore8API.Services;
 using Microsoft.Extensions.FileProviders;
-
+using Microsoft.AspNetCore.Identity.UI.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("ConnStr") ?? throw new InvalidOperationException("Connection string 'ConnStr' not found.");
@@ -73,7 +74,7 @@ builder.Services.AddAuthentication(options =>
             });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-
+//builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
