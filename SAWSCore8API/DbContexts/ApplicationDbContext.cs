@@ -141,4 +141,5 @@ public class SAWSDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ActivityLog> ActivityLogs { get; set; }
     public DbSet<FlightTemplate> FlightTemplates { get; set; }
     public DbSet<OperationalSettings> OperationalSettings { get; set; }
+    public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 }

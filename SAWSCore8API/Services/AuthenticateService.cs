@@ -8,7 +8,9 @@ using System.Text;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
-
+using SAWSCore8API.Dtos;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity.UI.Services;
 namespace SAWSCore8API.Services
 {
     public class AuthenticateService : IAuthenticateService
@@ -21,7 +23,7 @@ namespace SAWSCore8API.Services
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private ILogger<AuthenticateService> _logger;
-
+        private readonly IEmailSender _emailSender;
         public AuthenticateService(
                 SAWSDbContext context,
                 IUriService uriService,
@@ -30,7 +32,9 @@ namespace SAWSCore8API.Services
                 UserManager<ApplicationUser> userManager,
                 SignInManager<ApplicationUser> signInManager,
                 RoleManager<IdentityRole> roleManager,
-                ILogger<AuthenticateService> logger
+               // IEmailService emailService,
+                ILogger<AuthenticateService> logger,
+                IEmailSender emailSender
             )
         {
             _context = context;
@@ -41,7 +45,7 @@ namespace SAWSCore8API.Services
             _signInManager = signInManager;
             _roleManager = roleManager;
             _logger = logger;
-            // _emailService = emailService;
+             _emailSender = emailSender;
         }
 
         public async Task<LoginResult> LoginUser(LoginModel appUser)
@@ -354,8 +358,9 @@ namespace SAWSCore8API.Services
 
                     try
                     {
-                        EmailService emailService = new EmailService(_configuration);
-                        emailService.SendPasswordResetEmail(user.Email, resetEmailBody);
+                        
+                       // _emailService.SendPasswordResetEmail(user.Email, resetEmailBody);
+                      await _emailSender.SendEmailAsync(user?.Email, "South African Weather Service forgot/reset password request", resetEmailBody);
                     }
                     catch (Exception ex)
                     {
@@ -386,8 +391,8 @@ namespace SAWSCore8API.Services
 
             try
             {
-                EmailService emailService = new EmailService(_configuration);
-                emailService.SendLogInCredentialsEmail(credentials.username, resetEmailBody);
+                //EmailService emailService = new EmailService(_configuration);
+               // _emailService.SendLogInCredentialsEmail(credentials.username, resetEmailBody);
             }
             catch (Exception ex)
             {
@@ -455,10 +460,66 @@ namespace SAWSCore8API.Services
             }
 
         }
+        public async Task<CreatePasswordResult> RequestPasswordResetOTP(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return CreatePasswordResult.FailureResult("Email does not exist");
+            if (!user.IsActive) return CreatePasswordResult.FailureResult("Email account is deactivated, please contact administration");
 
+            var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var expiresAt = DateTime.UtcNow.AddMinutes(10);
+
+            _context.PasswordResetOtps.RemoveRange(_context.PasswordResetOtps.Where(x => x.Email == email));
+            _context.PasswordResetOtps.Add(new PasswordResetOtp { Email = email, OTP = otp, ExpiresAt = expiresAt });
+            await _context.SaveChangesAsync();
+
+            string resetEmailBody = $"<h1>South African Weather Service</h1>"
+                + $"<p>Your password reset OTP is:</p>"
+                + $"<h2 style='letter-spacing:5px; text-align:center; background:#f0f0f0; padding:15px;'>{otp}</h2>"
+                + $"<p>This OTP expires in 10 minutes.</p>";
+
+            try
+            {
+                await _emailSender.SendEmailAsync(user.Email, "South African Weather Service forgot/reset password request", resetEmailBody);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error with sending OTP email {user.Email}");
+                // don't throw, still continue
+            }
+
+            // RETURN OTP IN OBJECT HERE
+            return CreatePasswordResult.SuccessWithData(
+                $"OTP sent to {user.Email}",
+                new { email = user.Email, otp = otp, expiresAt = expiresAt }
+            );
+        }
+
+        public async Task<CreatePasswordResult> VerifyOTPAndResetPassword(VerifyOTPDto dto)
+        {
+            var otpRecord = await _context.PasswordResetOtps.FirstOrDefaultAsync(x => x.Email == dto.Email && x.OTP == dto.OTP);
+            if (otpRecord == null) return CreatePasswordResult.FailureResult("Invalid OTP");
+            if (otpRecord.ExpiresAt < DateTime.UtcNow) return CreatePasswordResult.FailureResult("OTP has expired");
+
+            var user = await _userManager.FindByEmailAsync(dto.Email);
+            if (user == null) return CreatePasswordResult.FailureResult("User not found");
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+
+            if (result.Succeeded)
+            {
+                _context.PasswordResetOtps.Remove(otpRecord);
+                await _context.SaveChangesAsync();
+                return CreatePasswordResult.SuccessResult("Password reset successfully");
+            }
+            return CreatePasswordResult.FailureResult(string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
         public void Save()
         {
             _context.SaveChanges();
         }
+
+
     }
 }

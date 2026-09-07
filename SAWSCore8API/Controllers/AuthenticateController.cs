@@ -925,7 +925,27 @@ namespace SAWSCore8API.Controllers
 
             }
         }
+        [HttpPost("RequestPasswordResetOTP")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RequestPasswordResetOTP([FromBody] RequestOtpDto dto)
+        {
+            if (string.IsNullOrEmpty(dto.Email)) return BadRequest("Email is required");
+            var result = await _authenticateService.RequestPasswordResetOTP(dto.Email);
+            await LogActivity("RequestPasswordResetOTP", dto.Email, "OTP requested");
+            return Ok(result);
+        }
 
+        [HttpPost("VerifyOTPAndResetPassword")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> VerifyOTPAndResetPassword([FromBody] VerifyOTPDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+            var result = await _authenticateService.VerifyOTPAndResetPassword(dto);
+            await LogActivity("VerifyOTPAndResetPassword", dto.Email, result.Success ? "OTP reset success" : "OTP reset failed");
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
         // [HttpPost("InsertUpdateUserProfile")]
         // [Consumes(MediaTypeNames.Application.Json)]
         // [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(UserProfile))]
@@ -1059,7 +1079,45 @@ namespace SAWSCore8API.Controllers
         {
             return _context.userProfiles.Any(e => e.userprofileid == id);
         }
+        private async Task LogActivity(string type, string username, string description)
+        {
+            try
+            {
+                var remoteIp = HttpContext.Connection.RemoteIpAddress;
+                var clientIp = remoteIp?.IsIPv4MappedToIPv6 == true ? remoteIp.MapToIPv4().ToString() : remoteIp?.ToString();
+                var userAgent = Request.Headers["User-Agent"].ToString();
 
+                DeviceDetector dd = new DeviceDetector();
+                try
+                {
+                    var headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
+                    var clientHints = ClientHints.Factory(headers);
+                    dd = new DeviceDetector(userAgent, clientHints);
+                    dd.Parse();
+                }
+                catch { }
+
+                ActivityLog alog = new ActivityLog
+                {
+                    activityLogId = 0,
+                    activityType = type,
+                    remoteipaddress = clientIp,
+                    activityDescription = description,
+                    createdby_aspnetusername = username,
+                    UserAgent = userAgent,
+                    IsMobile = dd.IsMobile(),
+                    DeviceType = dd.GetDeviceName() ?? "unknown",
+                    Brand = dd.GetBrand() ?? "unknown",
+                    Model = dd.GetModel() ?? "unknown",
+                    OsName = dd.GetOs().Match?.Name ?? "unknown",
+                    OsVersion = dd.GetOs().Match?.Version ?? "unknown",
+                    BrowserName = dd.GetClient().Match?.Name ?? "unknown",
+                    BrowserVersion = dd.GetClient().Match?.Version ?? "unknown"
+                };
+                await _activityLogger.LogAsync(HttpContext, alog);
+            }
+            catch { }
+        }
         #endregion
     }
 }
