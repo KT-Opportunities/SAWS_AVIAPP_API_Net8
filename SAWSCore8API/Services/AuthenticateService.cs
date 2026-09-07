@@ -463,46 +463,36 @@ namespace SAWSCore8API.Services
         public async Task<CreatePasswordResult> RequestPasswordResetOTP(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return CreatePasswordResult.FailureResult("Email does not exist");
+            if (!user.IsActive) return CreatePasswordResult.FailureResult("Email account is deactivated, please contact administration");
 
-            if (user != null)
+            var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+            var expiresAt = DateTime.UtcNow.AddMinutes(10);
+
+            _context.PasswordResetOtps.RemoveRange(_context.PasswordResetOtps.Where(x => x.Email == email));
+            _context.PasswordResetOtps.Add(new PasswordResetOtp { Email = email, OTP = otp, ExpiresAt = expiresAt });
+            await _context.SaveChangesAsync();
+
+            string resetEmailBody = $"<h1>South African Weather Service</h1>"
+                + $"<p>Your password reset OTP is:</p>"
+                + $"<h2 style='letter-spacing:5px; text-align:center; background:#f0f0f0; padding:15px;'>{otp}</h2>"
+                + $"<p>This OTP expires in 10 minutes.</p>";
+
+            try
             {
-                if (!user.IsActive)
-                {
-                    return CreatePasswordResult.FailureResult("Email account is deactivated, please contact administration");
-                }
-                else
-                {
-                    var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-                    var expiresAt = DateTime.UtcNow.AddMinutes(10);
-
-                    _context.PasswordResetOtps.RemoveRange(_context.PasswordResetOtps.Where(x => x.Email == email));
-                    _context.PasswordResetOtps.Add(new PasswordResetOtp { Email = email, OTP = otp, ExpiresAt = expiresAt });
-                    await _context.SaveChangesAsync();
-
-                    // Same format as RequestPasswordReset - build HTML body here
-                    string resetEmailBody = $"<h1>South African Weather Service</h1>"
-                        + $"<p>Your password reset OTP is:</p>"
-                        + $"<h2 style='letter-spacing:5px; text-align:center; background:#f0f0f0; padding:15px;'>{otp}</h2>"
-                        + $"<p>This OTP expires in 10 minutes.</p>";
-
-                    try
-                    {
-                       // EmailService emailService = new EmailService(_configuration);
-                        await _emailSender.SendEmailAsync(user?.Email, "South African Weather Service forgot/reset password request", resetEmailBody);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Error with sending OTP email {user.Email}");
-                        throw;
-                    }
-
-                    return CreatePasswordResult.SuccessResult($"OTP sent to {user.Email}");
-                }
+                await _emailSender.SendEmailAsync(user.Email, "South African Weather Service forgot/reset password request", resetEmailBody);
             }
-            else
+            catch (Exception ex)
             {
-                return CreatePasswordResult.FailureResult("Email does not exist");
+                _logger.LogError(ex, $"Error with sending OTP email {user.Email}");
+                // don't throw, still continue
             }
+
+            // RETURN OTP IN OBJECT HERE
+            return CreatePasswordResult.SuccessWithData(
+                $"OTP sent to {user.Email}",
+                new { email = user.Email, otp = otp, expiresAt = expiresAt }
+            );
         }
 
         public async Task<CreatePasswordResult> VerifyOTPAndResetPassword(VerifyOTPDto dto)
